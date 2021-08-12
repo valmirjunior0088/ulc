@@ -1,0 +1,43 @@
+name: ulc
+version: 0.1.0.0
+github: "valmirjunior0088/ulc"
+license: BSD3
+author: "Valmir Pretto"
+maintainer: "valmirjunior0088@gmail.com"
+copyright: "2021 Valmir Pretto"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+description: Please see the README on GitHub at <https://github.com/valmirjunior0088/ulc#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- mtl >= 2.2 && < 3
+- megaparsec >= 9.0 && < 10
+
+library:
+  source-dirs: src
+
+executables:
+  ulc-exe:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - ulc
+
+tests:
+  ulc-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - ulc

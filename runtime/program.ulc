@@ -1,0 +1,11 @@
+integer_sum =
+  left => right => {integer_sum left right};
+
+real_sum =
+  left => right => {real_sum left right};
+
+compose =
+  a => b => c => a (b c);
+
+run =
+  integer_sum 6 12;

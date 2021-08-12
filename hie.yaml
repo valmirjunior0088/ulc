@@ -1,0 +1,13 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "ulc:lib"
+
+    - path: "./app/Main.hs"
+      component: "ulc:exe:ulc-exe"
+
+    - path: "./app/Paths_ulc.hs"
+      component: "ulc:exe:ulc-exe"
+
+    - path: "./test"
+      component: "ulc:test:ulc-test"

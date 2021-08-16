@@ -6,13 +6,9 @@ module Ulc.PrettyPrinting
 import Data.List (intercalate)
 import Ulc.Generation (Statement (..), Function (..))
 
-annotation :: String
-annotation =
-  "struct object *"
-
 annotated :: String -> String
 annotated string =
-  annotation ++ string
+  "struct object *" ++ string
 
 indent :: [String] -> [String]
 indent =
@@ -38,43 +34,41 @@ prettyStatement statement =
         ++ show value
         ++ ");"
       ]
-    StReal tmp value ->
-      [annotated tmp
-        ++ " = object_real("
-        ++ show value
-        ++ ");"
-      ]
-    StClosure tmp name variables ->
-      if null variables
-        then [prefix ++ suffix]
-        else [prefix] ++ content ++ [suffix]
-      where
-        prefix =
-          annotated tmp
-            ++ " = object_closure("
-            ++ name ++ ", "
-            ++ show (length variables) ++ ", "
-            ++ "(" ++ annotation ++ "[]) {"
-        content =
-          indent (mapInit (++ ",") variables)
-        suffix =
-          "});"
-    StApply tmp function argument ->
-      [annotated tmp
-        ++ " = object_apply("
-        ++ function ++ ", " ++ argument
-        ++ ");"
-      ]
     StIntegerSum tmp left right ->
       [annotated tmp
         ++ " = object_integer_sum("
         ++ left ++ ", " ++ right
         ++ ");"
       ]
+    StReal tmp value ->
+      [annotated tmp
+        ++ " = object_real("
+        ++ show value
+        ++ ");"
+      ]
     StRealSum tmp left right ->
       [annotated tmp
         ++ " = object_real_sum("
         ++ left ++ ", " ++ right
+        ++ ");"
+      ]
+    StClosure tmp name variables ->
+      if null variables
+        then [header ++ footer]
+        else [header ++ ","] ++ content ++ [footer]
+      where
+        header =
+          annotated tmp
+            ++ " = object_closure_" ++ show (length variables)
+            ++ "(" ++ name
+        content =
+          indent (mapInit (++ ",") variables)
+        footer =
+          ");"
+    StApply tmp function argument ->
+      [annotated tmp
+        ++ " = object_apply("
+        ++ function ++ ", " ++ argument
         ++ ");"
       ]
     StCall tmp reference ->

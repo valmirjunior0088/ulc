@@ -20,11 +20,11 @@ data Statement =
   StEnter String |
   StLeave String |
   StInteger String Int |
+  StIntegerSum String String String |
   StReal String Float |
+  StRealSum String String String |
   StClosure String String [String] |
   StApply String String String |
-  StIntegerSum String String String |
-  StRealSum String String String |
   StCall String String |
   StReturn String |
   StNewLine

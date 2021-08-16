@@ -3,6 +3,9 @@
 #include "io.h"
 #include "memory.h"
 
+#define OBJECT_SIZE sizeof(struct object)
+#define OBJECT_REF_SIZE sizeof(struct object *)
+
 enum type {
   INTEGER,
   REAL,
@@ -70,51 +73,12 @@ void object_leave(struct object *object) {
 }
 
 struct object *object_integer(int value) {
-  struct object *object = alloc(sizeof(struct object));
+  struct object *object = alloc(OBJECT_SIZE);
   object->reference_count = 1;
   object->type = INTEGER;
   object->payload.integer.value = value;
 
   return object;
-}
-
-struct object *object_real(float value) {
-  struct object *object = alloc(sizeof(struct object));
-  object->reference_count = 1;
-  object->type = REAL;
-  object->payload.real.value = value;
-
-  return object;
-}
-
-struct object *object_closure(
-  abstraction abstraction,
-  unsigned capacity,
-  struct object *values[]
-) {
-  struct object *object = alloc(
-    sizeof(struct object) + sizeof(struct object *) * capacity
-  );
-
-  object->reference_count = 1;
-  object->type = CLOSURE;
-  object->payload.closure.abstraction = abstraction;
-  object->payload.closure.capacity = capacity;
-
-  for (int index = 0; index < capacity; index++) {
-    object->payload.closure.values[index] = values[index];
-  }
-
-  return object;
-}
-
-struct object *object_apply(struct object *function, struct object *argument) {
-  assert_type(function, CLOSURE);
-
-  return function->payload.closure.abstraction(
-    function->payload.closure.values,
-    argument
-  );
 }
 
 struct object *object_integer_sum(struct object *left, struct object *right) {
@@ -126,12 +90,230 @@ struct object *object_integer_sum(struct object *left, struct object *right) {
   );
 }
 
+struct object *object_real(float value) {
+  struct object *object = alloc(OBJECT_SIZE);
+  object->reference_count = 1;
+  object->type = REAL;
+  object->payload.real.value = value;
+
+  return object;
+}
+
 struct object *object_real_sum(struct object *left, struct object *right) {
   assert_type(left, REAL);
   assert_type(right, REAL);
 
   return object_real(
     left->payload.real.value + right->payload.real.value
+  );
+}
+
+
+struct object *object_closure_0(abstraction abstraction) {
+  struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 0);
+  object->reference_count = 1;
+  object->type = CLOSURE;
+  object->payload.closure.abstraction = abstraction;
+  object->payload.closure.capacity = 0;
+
+  return object;
+}
+
+struct object *object_closure_1(abstraction abstraction,
+  struct object *value_0
+) {
+  struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 1);
+  object->reference_count = 1;
+  object->type = CLOSURE;
+  object->payload.closure.abstraction = abstraction;
+  object->payload.closure.capacity = 1;
+  object->payload.closure.values[0] = value_0;
+
+  return object;
+}
+
+struct object *object_closure_2(abstraction abstraction,
+  struct object *value_0,
+  struct object *value_1
+) {
+  struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 2);
+  object->reference_count = 1;
+  object->type = CLOSURE;
+  object->payload.closure.abstraction = abstraction;
+  object->payload.closure.capacity = 2;
+  object->payload.closure.values[0] = value_0;
+  object->payload.closure.values[1] = value_1;
+
+  return object;
+}
+
+struct object *object_closure_3(abstraction abstraction,
+  struct object *value_0,
+  struct object *value_1,
+  struct object *value_2
+) {
+  struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 3);
+  object->reference_count = 1;
+  object->type = CLOSURE;
+  object->payload.closure.abstraction = abstraction;
+  object->payload.closure.capacity = 3;
+  object->payload.closure.values[0] = value_0;
+  object->payload.closure.values[1] = value_1;
+  object->payload.closure.values[2] = value_2;
+
+  return object;
+}
+
+struct object *object_closure_4(abstraction abstraction,
+  struct object *value_0,
+  struct object *value_1,
+  struct object *value_2,
+  struct object *value_3
+) {
+  struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 4);
+  object->reference_count = 1;
+  object->type = CLOSURE;
+  object->payload.closure.abstraction = abstraction;
+  object->payload.closure.capacity = 4;
+  object->payload.closure.values[0] = value_0;
+  object->payload.closure.values[1] = value_1;
+  object->payload.closure.values[2] = value_2;
+  object->payload.closure.values[3] = value_3;
+
+  return object;
+}
+
+struct object *object_closure_5(abstraction abstraction,
+  struct object *value_0,
+  struct object *value_1,
+  struct object *value_2,
+  struct object *value_3,
+  struct object *value_4
+) {
+  struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 5);
+  object->reference_count = 1;
+  object->type = CLOSURE;
+  object->payload.closure.abstraction = abstraction;
+  object->payload.closure.capacity = 5;
+  object->payload.closure.values[0] = value_0;
+  object->payload.closure.values[1] = value_1;
+  object->payload.closure.values[2] = value_2;
+  object->payload.closure.values[3] = value_3;
+  object->payload.closure.values[4] = value_4;
+
+  return object;
+}
+
+struct object *object_closure_6(abstraction abstraction,
+  struct object *value_0,
+  struct object *value_1,
+  struct object *value_2,
+  struct object *value_3,
+  struct object *value_4,
+  struct object *value_5
+) {
+  struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 6);
+  object->reference_count = 1;
+  object->type = CLOSURE;
+  object->payload.closure.abstraction = abstraction;
+  object->payload.closure.capacity = 6;
+  object->payload.closure.values[0] = value_0;
+  object->payload.closure.values[1] = value_1;
+  object->payload.closure.values[2] = value_2;
+  object->payload.closure.values[3] = value_3;
+  object->payload.closure.values[4] = value_4;
+  object->payload.closure.values[5] = value_5;
+
+  return object;
+}
+
+struct object *object_closure_7(abstraction abstraction,
+  struct object *value_0,
+  struct object *value_1,
+  struct object *value_2,
+  struct object *value_3,
+  struct object *value_4,
+  struct object *value_5,
+  struct object *value_6
+) {
+  struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 7);
+  object->reference_count = 1;
+  object->type = CLOSURE;
+  object->payload.closure.abstraction = abstraction;
+  object->payload.closure.capacity = 7;
+  object->payload.closure.values[0] = value_0;
+  object->payload.closure.values[1] = value_1;
+  object->payload.closure.values[2] = value_2;
+  object->payload.closure.values[3] = value_3;
+  object->payload.closure.values[4] = value_4;
+  object->payload.closure.values[5] = value_5;
+  object->payload.closure.values[6] = value_6;
+
+  return object;
+}
+
+struct object *object_closure_8(abstraction abstraction,
+  struct object *value_0,
+  struct object *value_1,
+  struct object *value_2,
+  struct object *value_3,
+  struct object *value_4,
+  struct object *value_5,
+  struct object *value_6,
+  struct object *value_7
+) {
+  struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 8);
+  object->reference_count = 1;
+  object->type = CLOSURE;
+  object->payload.closure.abstraction = abstraction;
+  object->payload.closure.capacity = 8;
+  object->payload.closure.values[0] = value_0;
+  object->payload.closure.values[1] = value_1;
+  object->payload.closure.values[2] = value_2;
+  object->payload.closure.values[3] = value_3;
+  object->payload.closure.values[4] = value_4;
+  object->payload.closure.values[5] = value_5;
+  object->payload.closure.values[6] = value_6;
+  object->payload.closure.values[7] = value_7;
+
+  return object;
+}
+
+struct object *object_closure_9(abstraction abstraction,
+  struct object *value_0,
+  struct object *value_1,
+  struct object *value_2,
+  struct object *value_3,
+  struct object *value_4,
+  struct object *value_5,
+  struct object *value_6,
+  struct object *value_7,
+  struct object *value_8
+) {
+  struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 9);
+  object->reference_count = 1;
+  object->type = CLOSURE;
+  object->payload.closure.abstraction = abstraction;
+  object->payload.closure.capacity = 9;
+  object->payload.closure.values[0] = value_0;
+  object->payload.closure.values[1] = value_1;
+  object->payload.closure.values[2] = value_2;
+  object->payload.closure.values[3] = value_3;
+  object->payload.closure.values[4] = value_4;
+  object->payload.closure.values[5] = value_5;
+  object->payload.closure.values[6] = value_6;
+  object->payload.closure.values[7] = value_7;
+  object->payload.closure.values[8] = value_8;
+
+  return object;
+}
+
+struct object *object_apply(struct object *function, struct object *argument) {
+  assert_type(function, CLOSURE);
+
+  return function->payload.closure.abstraction(
+    function->payload.closure.values,
+    argument
   );
 }
 

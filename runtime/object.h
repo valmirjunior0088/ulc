@@ -9,12 +9,76 @@ void object_enter(struct object *);
 void object_leave(struct object *);
 
 struct object *object_integer(int);
-struct object *object_real(float);
-struct object *object_closure(abstraction, unsigned, struct object *[]);
-struct object *object_apply(struct object *, struct object *);
-
 struct object *object_integer_sum(struct object *, struct object *);
+
+struct object *object_real(float);
 struct object *object_real_sum(struct object *, struct object *);
+
+struct object *object_closure_0(abstraction);
+struct object *object_closure_1(abstraction,
+    struct object *
+);
+struct object *object_closure_2(abstraction,
+    struct object *,
+    struct object *
+);
+struct object *object_closure_3(abstraction,
+    struct object *,
+    struct object *,
+    struct object *
+);
+struct object *object_closure_4(abstraction,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *
+);
+struct object *object_closure_5(abstraction,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *
+);
+struct object *object_closure_6(abstraction,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *
+);
+struct object *object_closure_7(abstraction,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *
+);
+struct object *object_closure_8(abstraction,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *
+);
+struct object *object_closure_9(abstraction,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *,
+    struct object *
+);
+struct object *object_apply(struct object *, struct object *);
 
 void object_debug(struct object *);
 

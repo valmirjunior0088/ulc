@@ -4,7 +4,6 @@ module Ulc
   where
 
 import Data.Function ((&))
-import Data.List (intercalate)
 import qualified Ulc.Core as Core
 import qualified Ulc.Parsing as Parsing
 import qualified Ulc.Conversion as Conversion
@@ -21,15 +20,14 @@ process name term =
 
 header :: String
 header =
-  intercalate "\n"
+  unlines
     ["#include \"object.h\""
-    ,""
     ,""
     ]
     
 footer :: String
 footer =
-  intercalate "\n"
+  unlines
     ["int main(void) {"
     ,"  struct object *result = run();"
     ,"  object_debug(result);"
@@ -37,7 +35,6 @@ footer =
     ,""
     ,"  return 0;"
     ,"}"
-    ,""
     ]
 
 run :: String -> Either String String

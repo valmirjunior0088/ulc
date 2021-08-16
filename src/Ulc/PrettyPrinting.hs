@@ -94,11 +94,10 @@ prettyStatements statements =
 
 prettyFunction :: String -> [String] -> [Statement] -> String
 prettyFunction name arguments statements =
-  intercalate "\n"
+  unlines
     [annotated name ++ prettyArguments arguments ++ " {"
     ,prettyStatements statements
     ,"}"
-    ,""
     ,""
     ]
 

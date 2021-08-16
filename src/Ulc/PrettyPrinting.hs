@@ -109,7 +109,13 @@ prettyDefinition :: Function -> String
 prettyDefinition (Function name statements) =
   prettyFunction name [] statements
 
+prettyPrototype :: Function -> String
+prettyPrototype (Function name _) =
+  annotated name ++ "();"
+
 pretty :: (Function, [Function]) -> String
 pretty (definition, abstractions) =
-  concat (map prettyAbstraction abstractions)
+  prettyPrototype definition ++ "\n"
+    ++ "\n"
+    ++ concat (map prettyAbstraction abstractions)
     ++ prettyDefinition definition

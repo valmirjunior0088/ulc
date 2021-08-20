@@ -1,10 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Ulc.Core
+module Ulc.Shared.Core
   (Literal (..)
   ,Primitive (..)
   ,Variable (..)
   ,Term (..)
+  ,Item (..)
   )
   where
 
@@ -30,3 +31,6 @@ data Term =
   TrAbstraction Term |
   TrApplication Term Term
   deriving (Show)
+
+data Item =
+  Item String Term

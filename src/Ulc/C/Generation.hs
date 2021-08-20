@@ -1,14 +1,16 @@
-module Ulc.Generation
+module Ulc.C.Generation
   (Statement (..)
   ,Function (..)
+  ,Item (..)
   ,generate
   )
   where
 
 import Control.Monad.Writer (Writer, tell, execWriter)
 import Control.Monad.State (StateT, get, put, evalStateT)
+import qualified Ulc.Shared as Shared
 
-import Ulc.Flattening
+import Ulc.Shared
   (Literal (..)
   ,Primitive (..)
   ,Variable (..)
@@ -33,6 +35,9 @@ data Statement =
 data Function =
   Function String [Statement]
   deriving (Show)
+
+data Item =
+  Item Function [Function]
 
 access :: Variable -> String
 access variable =
@@ -128,8 +133,8 @@ generateDefinition name term =
       tmp <- emit name term
       tell [StNewLine, StReturn tmp]
 
-generate :: String -> (Term, [Closure]) -> (Function, [Function])
-generate name (term, closures) =
-  (definition, abstractions) where
+generate :: Shared.Item -> Item
+generate (Shared.Item name term closures) =
+  Item definition abstractions where
     definition = generateDefinition name term
     abstractions = map (generateAbstraction name) (enumerate closures)

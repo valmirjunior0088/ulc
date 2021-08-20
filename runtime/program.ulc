@@ -4,8 +4,18 @@ integer_sum =
 real_sum =
   left => right => {real_sum left right};
 
-compose =
-  a => b => c => a (b c);
+nil =
+  case_nil => case_cons => case_nil;
+
+cons =
+  value => rest => case_nil => case_cons => case_cons value rest;
+
+integer_list =
+  cons 1 (cons 2 (cons 3 nil));
+
+foldr =
+  go => initial => list =>
+    list initial (value => rest => go value (foldr go initial rest));
 
 run =
-  integer_sum 6 12;
+  foldr integer_sum 0 integer_list;

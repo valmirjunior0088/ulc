@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ca695335a9717f5212846de23c28758731692a524fee8dec5dcf799b4a5ac855
+-- hash: 39f048d4bd39ce22970754da3de9986dbe5737c4455962848590335702d4af37
 
 name:           ulc
 version:        0.1.0.0
@@ -19,7 +19,6 @@ license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-    ChangeLog.md
 
 source-repository head
   type: git
@@ -28,12 +27,17 @@ source-repository head
 library
   exposed-modules:
       Ulc
-      Ulc.Conversion
-      Ulc.Core
-      Ulc.Flattening
-      Ulc.Generation
-      Ulc.Parsing
-      Ulc.PrettyPrinting
+      Ulc.C
+      Ulc.C.Generation
+      Ulc.C.PrettyPrinting
+      Ulc.Shared
+      Ulc.Shared.Conversion
+      Ulc.Shared.Core
+      Ulc.Shared.Flattening
+      Ulc.Shared.Parsing
+      Ulc.WebAssembly
+      Ulc.WebAssembly.Generation
+      Ulc.WebAssembly.PrettyPrinting
   other-modules:
       Paths_ulc
   hs-source-dirs:

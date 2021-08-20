@@ -1,15 +1,12 @@
-module Ulc.Parsing
-  (runParsing
-  ,psDefinitions
+module Ulc.Shared.Parsing
+  (parse
   )
   where
 
 import Data.Void (Void)
-import Text.Megaparsec (parse)
-import Text.Megaparsec.Error (errorBundlePretty)
 import Text.Megaparsec.Char (space1)
+import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char.Lexer as Lexer
-import Ulc.Core (Primitive (..), Literal (..), Term (..))
 
 import Text.Megaparsec
   (Parsec
@@ -21,6 +18,13 @@ import Text.Megaparsec
   ,optional
   ,single
   ,eof
+  )
+  
+import Ulc.Shared.Core
+  (Primitive (..)
+  ,Literal (..)
+  ,Term (..)
+  ,Item (..)
   )
 
 abstract :: String -> Term -> Term
@@ -47,12 +51,6 @@ abstract name =
 
 type Parsing a =
   Parsec Void String a
-
-runParsing :: Parsing a -> String -> Either String a
-runParsing action source =
-  case parse action "" source of
-    Left errorBundle -> Left (errorBundlePretty errorBundle)
-    Right result -> Right result
 
 psSpace :: Parsing ()
 psSpace =
@@ -119,10 +117,16 @@ psTerm :: String -> Parsing Term
 psTerm =
   psFunction
 
-psDefinition :: Parsing (String, Term)
-psDefinition =
-  (,) <$> (psName <* psSymbol "=") <*> psTerm ";"
+psItem :: Parsing Item
+psItem =
+  Item <$> (psName <* psSymbol "=") <*> psTerm ";"
 
-psDefinitions :: Parsing [(String, Term)]
-psDefinitions =
-  psLexeme (some psDefinition <* eof)
+psItems :: Parsing [Item]
+psItems =
+  psLexeme (some psItem <* eof)
+
+parse :: String -> Either String [Item]
+parse source =
+  case Megaparsec.parse psItems "" source of
+    Left errorBundle -> Left (Megaparsec.errorBundlePretty errorBundle)
+    Right items -> Right items

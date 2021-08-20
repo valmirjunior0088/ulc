@@ -1,16 +1,17 @@
-module Ulc.Flattening
+module Ulc.Shared.Flattening
   (Literal (..)
   ,Primitive (..)
   ,Variable (..)
   ,Term (..)
   ,Closure (..)
+  ,Item (..)
   ,flatten
   )
   where
 
 import Control.Monad.State (State, get, put, runState)
-import qualified Ulc.Conversion as Conversion
-import Ulc.Conversion (Literal (..), Variable (..))
+import Ulc.Shared.Conversion (Literal (..), Variable (..))
+import qualified Ulc.Shared.Conversion as Conversion
 
 data Primitive =
   PrIntegerSum Term Term |
@@ -29,6 +30,9 @@ data Term =
 data Closure =
   Closure Int Term
   deriving (Show)
+
+data Item =
+  Item String Term [Closure]
 
 type Flattening =
   State [Closure]
@@ -62,6 +66,6 @@ unwrap term =
     Conversion.TrApplication function argument ->
       TrApplication <$> unwrap function <*> unwrap argument
 
-flatten :: Conversion.Term -> (Term, [Closure])
-flatten term =
-  runFlattening (unwrap term)
+flatten :: Conversion.Item -> Item
+flatten (Conversion.Item name term) =
+  uncurry (Item name) (runFlattening $ unwrap term)

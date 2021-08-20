@@ -19,3 +19,4 @@ void print_real(float value) {
 void print_string(const char *value) {
   printf("%s", value);
 }
+

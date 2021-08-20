@@ -1,16 +1,17 @@
-module Ulc.Conversion
+module Ulc.Shared.Conversion
   (Literal (..)
   ,Primitive (..)
   ,Variable (..)
   ,Term (..)
+  ,Item (..)
   ,convert
   )
   where
 
 import Data.List (elemIndex)
 import Control.Monad.State (State, get, put, runState, evalState)
-import qualified Ulc.Core as Core
-import Ulc.Core (Literal (..))
+import Ulc.Shared.Core (Literal (..))
+import qualified Ulc.Shared.Core as Core
 
 data Primitive =
   PrIntegerSum Term Term |
@@ -30,6 +31,9 @@ data Term =
   TrAbstraction [Variable] Term |
   TrApplication Term Term
   deriving (Show)
+
+data Item =
+  Item String Term
 
 type Conversion =
   State [Core.Variable]
@@ -72,6 +76,6 @@ unwrap term =
     Core.TrApplication function argument ->
       TrApplication <$> unwrap function <*> unwrap argument
 
-convert :: Core.Term -> Term
-convert term =
-  evalConversion (unwrap term)
+convert :: Core.Item -> Item
+convert (Core.Item name term) =
+  Item name (evalConversion $ unwrap term)

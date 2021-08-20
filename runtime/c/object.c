@@ -344,3 +344,4 @@ void object_debug(struct object *object) {
 
   print_string(" }");
 }
+

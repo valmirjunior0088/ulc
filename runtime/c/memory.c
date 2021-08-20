@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-void *alloc(unsigned size) {
+void *alloc(size_t size) {
   return malloc(size);
 }
 

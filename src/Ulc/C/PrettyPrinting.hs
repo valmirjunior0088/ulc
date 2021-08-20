@@ -1,10 +1,11 @@
-module Ulc.PrettyPrinting
-  (pretty
+module Ulc.C.PrettyPrinting
+  (annotated
+  ,pretty
   )
   where
 
 import Data.List (intercalate)
-import Ulc.Generation (Statement (..), Function (..))
+import Ulc.C.Generation (Statement (..), Function (..), Item (..))
 
 annotated :: String -> String
 annotated string =
@@ -103,13 +104,6 @@ prettyDefinition :: Function -> String
 prettyDefinition (Function name statements) =
   prettyFunction name [] statements
 
-prettyPrototype :: Function -> String
-prettyPrototype (Function name _) =
-  annotated name ++ "();"
-
-pretty :: (Function, [Function]) -> String
-pretty (definition, abstractions) =
-  prettyPrototype definition ++ "\n"
-    ++ "\n"
-    ++ concat (map prettyAbstraction abstractions)
-    ++ prettyDefinition definition
+pretty :: Item -> String
+pretty (Item definition abstractions) =
+  concat (map prettyAbstraction abstractions) ++ prettyDefinition definition

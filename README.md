@@ -4,23 +4,7 @@ Untyped lambda calculus and compilation (through closure conversion, to C and We
 
 ## Usage
 
-Inside the `runtime` folder, run:
-
-```
-stack run program.ulc
-```
-
-This will output a `program.c` file, which you can compile with:
-
-```
-./build.sh
-```
-
-The compiled executable can be ran with:
-
-```
-./executable
-```
+Inside the `runtime` folder, run `./run-c.sh` or `./run-wasm.sh`. This will take care of compiling and running the `program.ulc` file.
 
 ## Syntax
 
@@ -33,6 +17,8 @@ compose =
 run =
   compose;
 ```
+
+Valid identifiers are words consisting of characters ranging `a..z` and `A..Z`.
 
 The syntax of the definitions in the `program.ulc` file are based on the untyped lambda calculus:
 - `abc` is a variable;
@@ -48,3 +34,11 @@ Last but not least, primitive operations on the aforementioned literals are also
 - `{real_sum left right}` sums two reals.
 
 It is important to note that, while it is valid to mention variables inside primitives, primitives cannot be partially applied. Eta-expansion is left to the user.
+
+## Caveats
+
+To run the `run` definition:
+- A `main` function is defined in the C backend;
+- A `_start` function is defined in the WebAssembly backend.
+
+This means that you should avoid using these names for definitions.

@@ -4,7 +4,7 @@ Untyped lambda calculus and compilation (through closure conversion, to C and We
 
 ## Usage
 
-Inside the `runtime` folder, run `./run-c.sh` or `./run-wasm.sh`. This will take care of compiling and running the `program.ulc` file.
+Inside the `runtime` folder, run `make c` or `make wasm`. This will take care of compiling and running the `program.ulc` file.
 
 ## Syntax
 

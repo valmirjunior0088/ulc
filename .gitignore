@@ -6,5 +6,6 @@ runtime/c/output.exe
 
 runtime/wasm/memory.wasm
 runtime/wasm/object.wasm
+runtime/wasm/program.wat
 runtime/wasm/program.wasm
 runtime/wasm/output.wasm

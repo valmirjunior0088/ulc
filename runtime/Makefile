@@ -22,7 +22,7 @@ wasm/program.wasm: wasm/program.wat
 	@wat2wasm wasm/program.wat --output wasm/program.wasm --relocatable
 
 wasm/output.wasm: wasm/memory.wasm wasm/object.wasm wasm/program.wasm
-	@wasm-ld wasm/memory.wasm wasm/object.wasm wasm/program.wasm -o wasm/output.wasm --allow-undefined
+	@wasm-ld wasm/memory.wasm wasm/object.wasm wasm/program.wasm -o wasm/output.wasm --allow-undefined --entry main
 
 wasm:
 	@echo "WebAssembly backend not implemented yet"

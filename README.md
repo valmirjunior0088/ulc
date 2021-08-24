@@ -37,8 +37,4 @@ It is important to note that, while it is valid to mention variables inside prim
 
 ## Caveats
 
-To run the `run` definition:
-- A `main` function is defined in the C backend;
-- A `_start` function is defined in the WebAssembly backend.
-
-This means that you should avoid using these names for definitions.
+To run the `run` definition, a `main` function is defined. This means that you should avoid using `main` as the name of a definition.

@@ -7,4 +7,3 @@ void *alloc(size_t size);
 void dealloc(void *pointer);
 
 #endif
-

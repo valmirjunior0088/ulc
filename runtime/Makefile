@@ -10,10 +10,10 @@ c: c/output.exe
 	@c/output.exe
 
 wasm/memory.wasm: wasm/memory.c
-	@clang wasm/memory.c -o wasm/memory.wasm --target=wasm32 --no-standard-libraries -c -I headers
+	@clang wasm/memory.c -o wasm/memory.wasm --target=wasm32 --no-standard-libraries -I headers -c
 
 wasm/object.wasm: wasm/object.c
-	@clang wasm/object.c -o wasm/object.wasm --target=wasm32 --no-standard-libraries -c -I headers
+	@clang wasm/object.c -o wasm/object.wasm --target=wasm32 --no-standard-libraries -I headers -c
 
 wasm/program.wat: program.ulc
 	@stack run wat program.ulc wasm/program.wat

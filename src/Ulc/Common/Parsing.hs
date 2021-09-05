@@ -1,4 +1,4 @@
-module Ulc.Shared.Parsing
+module Ulc.Common.Parsing
   (parse
   )
   where
@@ -20,7 +20,7 @@ import Text.Megaparsec
   ,eof
   )
   
-import Ulc.Shared.Core
+import Ulc.Common.Core
   (Primitive (..)
   ,Literal (..)
   ,Term (..)

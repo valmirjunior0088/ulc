@@ -6,16 +6,17 @@ module Ulc.C.Generation
   )
   where
 
-import Control.Monad.Writer (Writer, tell, execWriter)
 import Control.Monad.State (StateT, get, put, evalStateT)
-import qualified Ulc.Shared as Shared
+import Control.Monad.Writer (Writer, tell, execWriter)
+import qualified Ulc.Common as Common
 
-import Ulc.Shared
+import Ulc.Common
   (Literal (..)
   ,Primitive (..)
   ,Variable (..)
   ,Term (..)
-  ,Closure (..)
+  ,Definition (..)
+  ,Abstraction (..)
   )
 
 data Statement =
@@ -53,14 +54,6 @@ leave :: Variable -> Statement
 leave =
   StLeave . access
 
-mangle :: String -> Int -> String
-mangle name index =
-  name ++ "$" ++ show index
-
-enumerate :: [a] -> [(Int, a)]
-enumerate =
-  zip [0 ..]
-
 type Generation =
   StateT Int (Writer [Statement])
 
@@ -74,8 +67,8 @@ fresh = do
   put (succ value)
   return ("tmp_" ++ show value)
 
-emit :: String -> Term -> Generation String
-emit name term =
+emit :: Term -> Generation String
+emit term =
   case term of
     TrLiteral (LtInteger integer) -> do
       tmp <- fresh
@@ -86,14 +79,14 @@ emit name term =
       tell [StReal tmp real]
       return tmp
     TrPrimitive (PrIntegerSum left right) -> do
-      tmpLeft <- emit name left
-      tmpRight <- emit name right
+      tmpLeft <- emit left
+      tmpRight <- emit right
       tmp <- fresh
       tell [StIntegerSum tmp tmpLeft tmpRight]
       return tmp
     TrPrimitive (PrRealSum left right) -> do
-      tmpLeft <- emit name left
-      tmpRight <- emit name right
+      tmpLeft <- emit left
+      tmpRight <- emit right
       tmp <- fresh
       tell [StRealSum tmp tmpLeft tmpRight]
       return tmp
@@ -104,37 +97,35 @@ emit name term =
     TrVariable variable -> do
       tell [enter variable]
       return (access variable)
-    TrClosure index variables -> do
+    TrClosure name variables -> do
       tmp <- fresh
       tell (map enter variables)
-      tell [StClosure tmp (mangle name index) (map access variables)]
+      tell [StClosure tmp name (map access variables)]
       return tmp
     TrApplication function argument -> do
-      tmpFunction <- emit name function
-      tmpArgument <- emit name argument
+      tmpFunction <- emit function
+      tmpArgument <- emit argument
       tmp <- fresh
       tell [StApply tmp tmpFunction tmpArgument]
       return tmp
 
-generateAbstraction :: String -> (Int, Closure) -> Function
-generateAbstraction name (index, Closure size term) =
-  Function (mangle name index) statements where
+generateAbstraction :: Abstraction -> Function
+generateAbstraction (Abstraction name size term) =
+  Function name statements where
     variables = map VrEnvironment [0 .. pred size] ++ [VrArgument]
     statements = runGeneration $ do
-      tmp <- emit name term
+      tmp <- emit term
       tell [StNewLine]
       tell (map leave variables)
       tell [StNewLine, StReturn tmp]
 
-generateDefinition :: String -> Term -> Function
-generateDefinition name term =
+generateDefinition :: Definition -> Function
+generateDefinition (Definition name term) =
   Function name statements where
     statements = runGeneration $ do
-      tmp <- emit name term
+      tmp <- emit term
       tell [StNewLine, StReturn tmp]
 
-generate :: Shared.Item -> Item
-generate (Shared.Item name term closures) =
-  Item definition abstractions where
-    definition = generateDefinition name term
-    abstractions = map (generateAbstraction name) (enumerate closures)
+generate :: Common.Item -> Item
+generate (Common.Item definition abstractions) =
+  Item (generateDefinition definition) (map generateAbstraction abstractions)

@@ -1,23 +1,25 @@
-module Ulc.Shared
+module Ulc.Common
   (Literal (..)
   ,Primitive (..)
   ,Variable (..)
   ,Term (..)
-  ,Closure (..)
+  ,Definition (..)
+  ,Abstraction (..)
   ,Item (..)
   ,prepare
   )
   where
 
-import Ulc.Shared.Parsing (parse)
-import Ulc.Shared.Conversion (convert)
+import Ulc.Common.Parsing (parse)
+import Ulc.Common.Conversion (convert)
 
-import Ulc.Shared.Flattening
+import Ulc.Common.Flattening
   (Literal (..)
   ,Primitive (..)
   ,Variable (..)
   ,Term (..)
-  ,Closure (..)
+  ,Definition (..)
+  ,Abstraction (..)
   ,Item (..)
   ,flatten
   )

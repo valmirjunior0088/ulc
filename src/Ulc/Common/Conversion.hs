@@ -1,4 +1,4 @@
-module Ulc.Shared.Conversion
+module Ulc.Common.Conversion
   (Literal (..)
   ,Primitive (..)
   ,Variable (..)
@@ -10,8 +10,8 @@ module Ulc.Shared.Conversion
 
 import Data.List (elemIndex)
 import Control.Monad.State (State, get, put, runState, evalState)
-import Ulc.Shared.Core (Literal (..))
-import qualified Ulc.Shared.Core as Core
+import Ulc.Common.Core (Literal (..))
+import qualified Ulc.Common.Core as Core
 
 data Primitive =
   PrIntegerSum Term Term |
@@ -53,28 +53,36 @@ rebind variable =
     case elemIndex (pred variable) variables of
       Nothing -> do
         put (variables ++ [pred variable])
-        VrEnvironment <$> pure (length variables)
+        return (VrEnvironment $ length variables)
       Just index ->
-        VrEnvironment <$> pure index
+        return (VrEnvironment index)
 
 unwrap :: Core.Term -> Conversion Term
 unwrap term =
   case term of
     Core.TrLiteral literal ->
-      TrLiteral <$> pure literal
-    Core.TrPrimitive (Core.PrIntegerSum left right) ->
-      TrPrimitive <$> (PrIntegerSum <$> unwrap left <*> unwrap right)
-    Core.TrPrimitive (Core.PrRealSum left right) ->
-      TrPrimitive <$> (PrRealSum <$> unwrap left <*> unwrap right)
+      return (TrLiteral literal)
+    Core.TrPrimitive (Core.PrIntegerSum left right) -> do
+      left' <- unwrap left
+      right' <- unwrap right
+      return (TrPrimitive $ PrIntegerSum left' right')
+    Core.TrPrimitive (Core.PrRealSum left right) -> do
+      left' <- unwrap left
+      right' <- unwrap right
+      return (TrPrimitive $ PrRealSum left' right')
     Core.TrReference reference ->
-      TrReference <$> pure reference
-    Core.TrVariable variable ->
-      TrVariable <$> rebind variable
-    Core.TrAbstraction scope ->
-      TrAbstraction <$> mapM rebind variables <*> pure convertedTerm where
-        (convertedTerm, variables) = runConversion (unwrap scope)
-    Core.TrApplication function argument ->
-      TrApplication <$> unwrap function <*> unwrap argument
+      return (TrReference reference)
+    Core.TrVariable variable -> do
+      variable' <- rebind variable
+      return (TrVariable variable')
+    Core.TrAbstraction scope -> do
+      let (term', variables) = runConversion (unwrap scope)
+      variables' <- mapM rebind variables
+      return (TrAbstraction variables' term')
+    Core.TrApplication function argument -> do
+      function' <- unwrap function
+      argument' <- unwrap argument
+      return (TrApplication function' argument')
 
 convert :: Core.Item -> Item
 convert (Core.Item name term) =

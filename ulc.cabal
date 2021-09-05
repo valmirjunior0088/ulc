@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 39f048d4bd39ce22970754da3de9986dbe5737c4455962848590335702d4af37
+-- hash: 20ad8c1f1c2ced22cc2bfdcc79c89287094c82add803ef3fb8f7bc4d1bca9665
 
 name:           ulc
 version:        0.1.0.0
@@ -30,11 +30,11 @@ library
       Ulc.C
       Ulc.C.Generation
       Ulc.C.PrettyPrinting
-      Ulc.Shared
-      Ulc.Shared.Conversion
-      Ulc.Shared.Core
-      Ulc.Shared.Flattening
-      Ulc.Shared.Parsing
+      Ulc.Common
+      Ulc.Common.Conversion
+      Ulc.Common.Core
+      Ulc.Common.Flattening
+      Ulc.Common.Parsing
       Ulc.WebAssembly
       Ulc.WebAssembly.Generation
       Ulc.WebAssembly.PrettyPrinting

@@ -3,7 +3,7 @@ module Ulc.C
   )
   where
 
-import Ulc.Shared (Item (..), prepare)
+import Ulc.Common (Definition (..), Item (..), prepare)
 import Ulc.C.Generation (generate)
 import Ulc.C.PrettyPrinting (annotated, pretty)
 
@@ -27,7 +27,7 @@ footer =
     ]
 
 declare :: Item -> String
-declare (Item name _ _) =
+declare (Item (Definition name _) _) =
   annotated name ++ "();"
   
 declares :: [Item] -> String

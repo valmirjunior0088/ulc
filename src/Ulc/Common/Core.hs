@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Ulc.Shared.Core
+module Ulc.Common.Core
   (Literal (..)
   ,Primitive (..)
   ,Variable (..)

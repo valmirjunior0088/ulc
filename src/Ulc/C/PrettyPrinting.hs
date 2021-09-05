@@ -83,27 +83,20 @@ prettyArguments :: [String] -> String
 prettyArguments arguments =
   "(" ++ intercalate ", " (map annotated arguments) ++ ")"
 
-prettyStatements :: [Statement] -> String
-prettyStatements statements =
-  intercalate "\n" (indent $ concat $ map prettyStatement statements)
-
-prettyFunction :: String -> [String] -> [Statement] -> String
+prettyFunction :: String -> [String] -> [Statement] -> [String]
 prettyFunction name arguments statements =
-  unlines
-    [annotated name ++ prettyArguments arguments ++ " {"
-    ,prettyStatements statements
-    ,"}"
-    ,""
-    ]
+  [annotated name ++ prettyArguments arguments ++ " {"]
+    ++ indent (concat (map prettyStatement statements))
+    ++ ["}", ""]
 
-prettyAbstraction :: Function -> String
+prettyAbstraction :: Function -> [String]
 prettyAbstraction (Function name statements) =
   prettyFunction name ["env[]", "arg"] statements
 
-prettyDefinition :: Function -> String
+prettyDefinition :: Function -> [String]
 prettyDefinition (Function name statements) =
   prettyFunction name [] statements
 
-pretty :: Item -> String
+pretty :: Item -> [String]
 pretty (Item definition abstractions) =
   concat (map prettyAbstraction abstractions) ++ prettyDefinition definition

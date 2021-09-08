@@ -6,8 +6,8 @@ module Ulc.C.Generation
   )
   where
 
-import Control.Monad.State (StateT, get, put, evalStateT)
-import Control.Monad.Writer (Writer, tell, execWriter)
+import Control.Monad.State (StateT, evalStateT, get, put)
+import Control.Monad.Writer (Writer, execWriter, tell)
 import qualified Ulc.Common as Common
 
 import Ulc.Common

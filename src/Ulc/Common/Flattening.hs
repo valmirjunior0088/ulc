@@ -10,9 +10,9 @@ module Ulc.Common.Flattening
   )
   where
 
-import Control.Monad.Reader (ReaderT, ask, runReaderT)
-import Control.Monad.State (StateT, get, put, evalStateT)
-import Control.Monad.Writer (Writer, tell, runWriter)
+import Control.Monad.Reader (ReaderT, runReaderT, ask)
+import Control.Monad.State (StateT, evalStateT, get, put)
+import Control.Monad.Writer (Writer, runWriter, tell)
 import Ulc.Common.Conversion (Literal (..), Variable (..))
 import qualified Ulc.Common.Conversion as Conversion
 

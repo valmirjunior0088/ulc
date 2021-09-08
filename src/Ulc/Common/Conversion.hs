@@ -9,7 +9,7 @@ module Ulc.Common.Conversion
   where
 
 import Data.List (elemIndex)
-import Control.Monad.State (State, get, put, runState, evalState)
+import Control.Monad.State (State, runState, evalState, get, put)
 import Ulc.Common.Core (Literal (..))
 import qualified Ulc.Common.Core as Core
 

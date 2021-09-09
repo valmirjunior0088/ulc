@@ -15,69 +15,57 @@ indent :: [String] -> [String]
 indent =
   map ("  " ++)
 
-mapInit :: (a -> a) -> [a] -> [a]
-mapInit f list =
-  case list of
-    [] -> []
-    x : [] -> x : []
-    x : xs -> f x : mapInit f xs
-
-prettyStatement :: Statement -> [String]
+prettyStatement :: Statement -> String
 prettyStatement statement =
   case statement of
     StEnter object ->
-      ["object_enter(" ++ object ++ ");"]
+      "object_enter(" ++ object ++ ");"
     StLeave object ->
-      ["object_leave(" ++ object ++ ");"]
+      "object_leave(" ++ object ++ ");"
     StInteger tmp value ->
-      [annotated tmp
+      annotated tmp
         ++ " = object_integer("
         ++ show value
         ++ ");"
-      ]
     StIntegerSum tmp left right ->
-      [annotated tmp
+      annotated tmp
         ++ " = object_integer_sum("
         ++ left ++ ", " ++ right
         ++ ");"
-      ]
     StReal tmp value ->
-      [annotated tmp
+      annotated tmp
         ++ " = object_real("
         ++ show value
         ++ ");"
-      ]
     StRealSum tmp left right ->
-      [annotated tmp
+      annotated tmp
         ++ " = object_real_sum("
         ++ left ++ ", " ++ right
         ++ ");"
-      ]
     StClosure tmp name variables ->
       if null variables
-        then [header ++ footer]
-        else [header ++ ","] ++ content ++ [footer]
+        then header ++ footer
+        else header ++ ", " ++ content ++ footer
       where
         header =
           annotated tmp
             ++ " = object_closure_" ++ show (length variables)
             ++ "(" ++ name
         content =
-          indent (mapInit (++ ",") variables)
+          intercalate ", " variables
         footer =
           ");"
     StApply tmp function argument ->
-      [annotated tmp
+      annotated tmp
         ++ " = object_apply("
         ++ function ++ ", " ++ argument
         ++ ");"
-      ]
     StCall tmp reference ->
-      [annotated tmp ++ " = " ++ reference ++ "();"]
+      annotated tmp ++ " = " ++ reference ++ "();"
     StReturn object ->
-      ["return " ++ object ++ ";"]
+      "return " ++ object ++ ";"
     StNewLine ->
-      [""]
+      ""
 
 prettyArguments :: [String] -> String
 prettyArguments arguments =
@@ -86,7 +74,7 @@ prettyArguments arguments =
 prettyFunction :: String -> [String] -> [Statement] -> [String]
 prettyFunction name arguments statements =
   [annotated name ++ prettyArguments arguments ++ " {"]
-    ++ indent (concat (map prettyStatement statements))
+    ++ indent (map prettyStatement statements)
     ++ ["}", ""]
 
 prettyAbstraction :: Function -> [String]

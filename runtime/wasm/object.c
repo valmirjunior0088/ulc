@@ -109,7 +109,9 @@ struct object *object_real_sum(struct object *left, struct object *right) {
 }
 
 
-struct object *object_closure_0(abstraction abstraction) {
+struct object *object_closure_0(
+  abstraction abstraction
+) {
   struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 0);
   object->reference_count = 1;
   object->type = CLOSURE;
@@ -119,7 +121,8 @@ struct object *object_closure_0(abstraction abstraction) {
   return object;
 }
 
-struct object *object_closure_1(abstraction abstraction,
+struct object *object_closure_1(
+  abstraction abstraction,
   struct object *value_0
 ) {
   struct object *object = alloc(OBJECT_SIZE + OBJECT_REF_SIZE * 1);
@@ -132,7 +135,8 @@ struct object *object_closure_1(abstraction abstraction,
   return object;
 }
 
-struct object *object_closure_2(abstraction abstraction,
+struct object *object_closure_2(
+  abstraction abstraction,
   struct object *value_0,
   struct object *value_1
 ) {
@@ -147,7 +151,8 @@ struct object *object_closure_2(abstraction abstraction,
   return object;
 }
 
-struct object *object_closure_3(abstraction abstraction,
+struct object *object_closure_3(
+  abstraction abstraction,
   struct object *value_0,
   struct object *value_1,
   struct object *value_2
@@ -164,7 +169,8 @@ struct object *object_closure_3(abstraction abstraction,
   return object;
 }
 
-struct object *object_closure_4(abstraction abstraction,
+struct object *object_closure_4(
+  abstraction abstraction,
   struct object *value_0,
   struct object *value_1,
   struct object *value_2,
@@ -183,7 +189,8 @@ struct object *object_closure_4(abstraction abstraction,
   return object;
 }
 
-struct object *object_closure_5(abstraction abstraction,
+struct object *object_closure_5(
+  abstraction abstraction,
   struct object *value_0,
   struct object *value_1,
   struct object *value_2,
@@ -204,7 +211,8 @@ struct object *object_closure_5(abstraction abstraction,
   return object;
 }
 
-struct object *object_closure_6(abstraction abstraction,
+struct object *object_closure_6(
+  abstraction abstraction,
   struct object *value_0,
   struct object *value_1,
   struct object *value_2,
@@ -227,7 +235,8 @@ struct object *object_closure_6(abstraction abstraction,
   return object;
 }
 
-struct object *object_closure_7(abstraction abstraction,
+struct object *object_closure_7(
+  abstraction abstraction,
   struct object *value_0,
   struct object *value_1,
   struct object *value_2,
@@ -252,7 +261,8 @@ struct object *object_closure_7(abstraction abstraction,
   return object;
 }
 
-struct object *object_closure_8(abstraction abstraction,
+struct object *object_closure_8(
+  abstraction abstraction,
   struct object *value_0,
   struct object *value_1,
   struct object *value_2,
@@ -279,7 +289,8 @@ struct object *object_closure_8(abstraction abstraction,
   return object;
 }
 
-struct object *object_closure_9(abstraction abstraction,
+struct object *object_closure_9(
+  abstraction abstraction,
   struct object *value_0,
   struct object *value_1,
   struct object *value_2,

@@ -47,12 +47,20 @@ runFlattening :: Flattening a -> String -> (a, [Abstraction])
 runFlattening action name =
   runWriter (evalStateT (runReaderT action name) 0)
 
+mangleDefinition :: String -> String
+mangleDefinition name =
+  name ++ "$def"
+
+mangleAbstraction :: String -> Int -> String
+mangleAbstraction name index =
+  name ++ "$abs_" ++ show index
+
 fresh :: Flattening String
 fresh = do
   name <- ask
-  source <- get
-  put (succ source)
-  return (name ++ "$" ++ show source)
+  index <- get
+  put (succ index)
+  return (mangleAbstraction name index)
 
 unwrap :: Conversion.Term -> Flattening Term
 unwrap term =
@@ -68,7 +76,7 @@ unwrap term =
       right' <- unwrap right
       return (TrPrimitive $ PrRealSum left' right')
     Conversion.TrReference reference ->
-      return (TrReference reference)
+      return (TrReference $ mangleDefinition reference)
     Conversion.TrVariable variable -> 
       return (TrVariable variable)
     Conversion.TrAbstraction variables scope -> do
@@ -83,5 +91,5 @@ unwrap term =
 
 flatten :: Conversion.Item -> Item
 flatten (Conversion.Item name term) =
-  Item (Definition name definition) abstractions where
+  Item (Definition (mangleDefinition name) definition) abstractions where
     (definition, abstractions) = runFlattening (unwrap term) name

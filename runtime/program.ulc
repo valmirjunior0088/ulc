@@ -17,5 +17,5 @@ foldr =
   go => initial => list =>
     list initial (value => rest => go value (foldr go initial rest));
 
-run =
+main =
   foldr integer_sum 0 integer_list;

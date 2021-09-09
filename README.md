@@ -15,7 +15,7 @@ Inside the `runtime` folder:
 
 ## Syntax
 
-Top-level definitions have a name, followed by a `=` and terminated by a `;`. The runtime will execute the definition named `run` and then print its memory representation. The following example will output `{ CLOSURE [ ] }` to the terminal once it is executed.
+Top-level definitions have a name, followed by a `=` and terminated by a `;`. The runtime will execute the definition named `main` and then print its memory representation. The following example will output `{ CLOSURE [ ] }` to the terminal once it is executed.
 
 ```
 compose =
@@ -41,7 +41,3 @@ Last but not least, primitive operations on the aforementioned literals are also
 - `{real_sum left right}` sums two reals.
 
 It is important to note that, while it is valid to mention variables inside primitives, primitives cannot be partially applied. Eta-expansion is left to the user.
-
-## Caveats
-
-To run the `run` definition, a `main` function is defined. This means that you should avoid using `main` as the name of a definition.

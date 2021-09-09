@@ -1,4 +1,4 @@
-.PHONY: c wasm
+.PHONY: c
 
 c/program.c: program.ulc
 	@stack run c program.ulc c/program.c
@@ -15,15 +15,8 @@ wasm/memory.wasm: wasm/memory.c
 wasm/object.wasm: wasm/object.c
 	@clang wasm/object.c -o wasm/object.wasm --target=wasm32 --no-standard-libraries -I headers -c -O3
 
-wasm/program.wat: program.ulc
-	@stack run wat program.ulc wasm/program.wat
-
-wasm/program.wasm: wasm/program.wat
-	@wat2wasm wasm/program.wat --output wasm/program.wasm --relocatable
+wasm/program.wasm: program.ulc
+	@stack run wasm program.ulc wasm/program.wasm
 
 wasm/output.wasm: wasm/memory.wasm wasm/object.wasm wasm/program.wasm
 	@wasm-ld wasm/memory.wasm wasm/object.wasm wasm/program.wasm -o wasm/output.wasm --allow-undefined --entry main -O3
-
-wasm:
-	@echo "WebAssembly backend not implemented yet"
-	@exit 1

@@ -10,5 +10,5 @@ run :: String -> String -> Either String String
 run mode source =
   case mode of
     "c" -> C.run source
-    "wat" -> WebAssembly.run source
+    "wasm" -> WebAssembly.run source
     _ -> Left ("Unknown mode: " ++ mode)

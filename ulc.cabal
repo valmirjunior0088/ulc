@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 20ad8c1f1c2ced22cc2bfdcc79c89287094c82add803ef3fb8f7bc4d1bca9665
+-- hash: 1991c19ddd75514255ed3b550dc7af2b34518cfd55dad1ffe61f711f86e6283c
 
 name:           ulc
 version:        0.1.0.0
@@ -36,8 +36,6 @@ library
       Ulc.Common.Flattening
       Ulc.Common.Parsing
       Ulc.WebAssembly
-      Ulc.WebAssembly.Generation
-      Ulc.WebAssembly.PrettyPrinting
   other-modules:
       Paths_ulc
   hs-source-dirs:

@@ -4,13 +4,14 @@ Untyped lambda calculus and compilation (through closure conversion, to C and We
 
 ## Dependencies
 
-- [Stack](https://www.haskellstack.org/) (for the compiler);
-- [Clang](https://clang.llvm.org/) (for both C and WebAssembly backends);
-- [WABT](https://github.com/WebAssembly/wabt) (for the WebAssembly backend);
+- [Stack](https://www.haskellstack.org/);
+- [Clang](https://clang.llvm.org/).
 
 ## Usage
 
-Inside the `runtime` folder, run `make c` or `make wasm`. This will take care of compiling and running the `program.ulc` file.
+Inside the `runtime` folder:
+- `make c` will compile and run the `program.ulc` file through the C backend;
+- `make wasm/output.wasm` will compile the `program.ulc` file through the WebAssembly backend. The user still needs to run a [HTTP server](https://github.com/http-party/http-server) on the `wasm` folder so that the browser can execute the `wasm/output.wasm` file.
 
 ## Syntax
 

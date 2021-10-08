@@ -11,28 +11,28 @@ function read_null_terminated_string(instance, pointer) {
   return new TextDecoder('utf-8').decode(bytes);
 }
 
-function print_integer(integer) {
-  document.body.innerHTML += integer;
+function io_integer(value) {
+  document.body.innerHTML += value;
 }
 
-function print_real(real) {
-  document.body.innerHTML += real;
+function io_real(value) {
+  document.body.innerHTML += value;
 }
 
-function print_string(instance, pointer) {
+function io_string(instance, pointer) {
   document.body.innerHTML += read_null_terminated_string(instance, pointer);
 }
 
-function panic(instance, pointer) {
+function io_panic(instance, pointer) {
   throw new WebAssembly.RuntimeError(read_null_terminated_string(instance, pointer));
 }
 
 let { instance } = await WebAssembly.instantiateStreaming(fetch("output.wasm"), {
   env: {
-    print_integer: integer => print_integer(integer),
-    print_real: real => print_real(real),
-    print_string: pointer => print_string(instance, pointer),
-    panic: pointer => panic(instance, pointer),
+    io_integer: value => io_integer(value),
+    io_real: value => io_real(value),
+    io_string: pointer => io_string(instance, pointer),
+    io_panic: pointer => io_panic(instance, pointer),
   }
 });
 

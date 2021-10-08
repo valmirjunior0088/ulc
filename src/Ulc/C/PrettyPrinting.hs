@@ -4,8 +4,8 @@ module Ulc.C.PrettyPrinting
   )
   where
 
-import Data.List (intercalate)
 import Ulc.C.Generation (Statement (..), Function (..), Item (..))
+import Data.List (intercalate)
 
 annotated :: String -> String
 annotated string =
@@ -44,24 +44,24 @@ prettyStatement statement =
         ++ ");"
     StClosure tmp name variables ->
       if null variables
-        then header ++ footer
-        else header ++ ", " ++ content ++ footer
+        then prefix ++ suffix
+        else prefix ++ ", " ++ content ++ suffix
       where
-        header =
+        prefix =
           annotated tmp
             ++ " = object_closure_" ++ show (length variables)
             ++ "(" ++ name
         content =
           intercalate ", " variables
-        footer =
+        suffix =
           ");"
     StApply tmp function argument ->
       annotated tmp
         ++ " = object_apply("
         ++ function ++ ", " ++ argument
         ++ ");"
-    StCall tmp reference ->
-      annotated tmp ++ " = " ++ reference ++ "();"
+    StReference tmp name ->
+      annotated tmp ++ " = " ++ name ++ "();"
     StReturn object ->
       "return " ++ object ++ ";"
     StNewLine ->

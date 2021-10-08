@@ -3,19 +3,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void print_integer(int value) {
+void io_integer(int value) {
   printf("%d", value);
 }
 
-void print_real(float value) {
+void io_real(float value) {
   printf("%f", value);
 }
 
-void print_string(const char *value) {
+void io_string(const char *value) {
   printf("%s", value);
 }
 
-void panic(const char *message) {
+void io_panic(const char *message) {
   printf("panic: %s", message);
   exit(1);
 }

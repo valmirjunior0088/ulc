@@ -22,7 +22,7 @@ struct real {
 
 struct closure {
   abstraction abstraction;
-  unsigned capacity;
+  int capacity;
   struct object *values[];
 };
 
@@ -33,20 +33,20 @@ union payload {
 };
 
 struct object {
-  unsigned reference_count;
+  int reference_count;
   enum type type;
   union payload payload;
 };
 
 void assert_reference_count(struct object *object) {
   if (object->reference_count <= 0) {
-    panic("object had invalid reference count");
+    io_panic("object had invalid reference count");
   }
 }
 
 void assert_type(struct object *object, enum type type) {
   if (object->type != type) {
-    panic("object had wrong type");
+    io_panic("object had wrong type");
   }
 }
 
@@ -329,30 +329,30 @@ struct object *object_apply(struct object *function, struct object *argument) {
 }
 
 void object_debug(struct object *object) {
-  print_string("{ ");
+  io_string("{ ");
 
   switch (object->type) {
     case INTEGER:
-      print_string("INTEGER ");
-      print_integer(object->payload.integer.value);
+      io_string("INTEGER ");
+      io_integer(object->payload.integer.value);
       break;
 
     case REAL:
-      print_string("REAL ");
-      print_real(object->payload.real.value);
+      io_string("REAL ");
+      io_real(object->payload.real.value);
       break;
     
     case CLOSURE:
-      print_string("CLOSURE [ ");
+      io_string("CLOSURE [ ");
 
       for (int index = 0; index < object->payload.closure.capacity; index++) {
         object_debug(object->payload.closure.values[index]);
       }
 
-      print_string(" ]");
+      io_string(" ]");
       break;
   }
 
-  print_string(" }");
+  io_string(" }");
 }
 

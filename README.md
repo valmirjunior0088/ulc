@@ -10,8 +10,8 @@ Untyped lambda calculus and compilation (through closure conversion, to C and We
 ## Usage
 
 Inside the `runtime` folder:
-- `make c` will compile and run the `program.ulc` file through the C backend;
-- `make wasm/output.wasm` will compile the `program.ulc` file through the WebAssembly backend. The user still needs to run a [HTTP server](https://github.com/http-party/http-server) on the `wasm` folder so that the browser can execute the `wasm/output.wasm` file.
+- `make c` will compile and run the `program.ulc` through the C backend;
+- `make wasm` will compile the `program.ulc` file through the WebAssembly backend and run a HTTP server (`http://localhost:8080`) to serve the resulting `output.wasm` file.
 
 ## Syntax
 

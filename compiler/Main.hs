@@ -4,7 +4,7 @@ import Ulc (run)
 
 usage :: String -> String
 usage name =
-  "USAGE: " ++ name ++ " MODE FILE OUTPUT"
+  "USAGE: " ++ name ++ " FILE OUTPUT"
 
 main :: IO ()
 main = do

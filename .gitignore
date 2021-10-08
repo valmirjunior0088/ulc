@@ -2,9 +2,9 @@
 *~
 
 runtime/c/program.c
-runtime/c/output.exe
+runtime/c/output
 
-runtime/wasm/memory.wasm
-runtime/wasm/object.wasm
-runtime/wasm/program.wasm
+runtime/wasm/memory.o
+runtime/wasm/object.o
+runtime/wasm/program.o
 runtime/wasm/output.wasm

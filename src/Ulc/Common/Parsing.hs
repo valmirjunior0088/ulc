@@ -8,6 +8,13 @@ import Text.Megaparsec.Char (space1)
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char.Lexer as Lexer
 
+import Ulc.Common.Core
+  (Primitive (..)
+  ,Literal (..)
+  ,Term (..)
+  ,Item (..)
+  )
+
 import Text.Megaparsec
   (Parsec
   ,(<|>)
@@ -18,13 +25,6 @@ import Text.Megaparsec
   ,optional
   ,single
   ,eof
-  )
-  
-import Ulc.Common.Core
-  (Primitive (..)
-  ,Literal (..)
-  ,Term (..)
-  ,Item (..)
   )
 
 abstract :: String -> Term -> Term

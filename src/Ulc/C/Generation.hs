@@ -6,9 +6,9 @@ module Ulc.C.Generation
   )
   where
 
+import qualified Ulc.Common as Common
 import Control.Monad.State (StateT, evalStateT, get, put)
 import Control.Monad.Writer (Writer, execWriter, tell)
-import qualified Ulc.Common as Common
 
 import Ulc.Common
   (Literal (..)
@@ -28,7 +28,7 @@ data Statement =
   StRealSum String String String |
   StClosure String String [String] |
   StApply String String String |
-  StCall String String |
+  StReference String String |
   StReturn String |
   StNewLine
   deriving (Show)
@@ -92,7 +92,7 @@ emit term =
       return tmp
     TrReference reference -> do
       tmp <- fresh
-      tell [StCall tmp reference]
+      tell [StReference tmp reference]
       return tmp
     TrVariable variable -> do
       tell [enter variable]

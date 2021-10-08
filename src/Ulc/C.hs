@@ -15,7 +15,7 @@ header =
 
 footer :: [String]
 footer =
-  ["int main(void) {"
+  ["int main() {"
   ,"  struct object *result = main$def();"
   ,"  object_debug(result);"
   ,"  object_leave(result);"

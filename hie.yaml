@@ -3,11 +3,17 @@ cradle:
     - path: "./src"
       component: "ulc:lib"
 
-    - path: "./app/Main.hs"
-      component: "ulc:exe:ulc-exe"
+    - path: "./compiler/Main.hs"
+      component: "ulc:exe:ulc-compiler"
 
-    - path: "./app/Paths_ulc.hs"
-      component: "ulc:exe:ulc-exe"
+    - path: "./compiler/Paths_ulc.hs"
+      component: "ulc:exe:ulc-compiler"
+
+    - path: "./server/Main.hs"
+      component: "ulc:exe:ulc-server"
+
+    - path: "./server/Paths_ulc.hs"
+      component: "ulc:exe:ulc-server"
 
     - path: "./test"
       component: "ulc:test:ulc-test"

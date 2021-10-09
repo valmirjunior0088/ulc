@@ -3,7 +3,7 @@ module Ulc.C
   )
   where
 
-import Ulc.Common (Definition (..), Item (..), prepare)
+import Ulc.Common (Definition (..), Item (..))
 import Ulc.C.Generation (generate)
 import Ulc.C.PrettyPrinting (annotated, pretty)
 
@@ -32,7 +32,10 @@ process :: [Item] -> [String]
 process items =
   map declare items ++ [""] ++ concat (map (pretty . generate) items)
 
-run :: String -> Either String String
-run source = do
-  items <- prepare source
-  return (unlines $ header ++ process items ++ footer)
+compile :: [Item] -> String
+compile items =
+  unlines (header ++ process items ++ footer)
+
+run :: FilePath -> [Item] -> IO ()
+run output items =
+  writeFile output (compile items)

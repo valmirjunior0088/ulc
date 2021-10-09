@@ -15,6 +15,7 @@ dependencies:
 - base >= 4.7 && < 5
 - mtl >= 2.2 && < 3
 - megaparsec >= 9.0 && < 10
+- bytestring >= 0.10 && < 1
 
 library:
   source-dirs: src

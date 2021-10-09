@@ -4,18 +4,14 @@ import Ulc (run)
 
 usage :: String -> String
 usage name =
-  "USAGE: " ++ name ++ " FILE OUTPUT"
+  "USAGE: " ++ name ++ " INPUT OUTPUT"
 
 main :: IO ()
 main = do
   arguments <- getArgs
 
-  (mode, file, output) <- case arguments of
-    mode : file : output : [] -> return (mode, file, output)
+  (mode, input, output) <- case arguments of
+    mode : input : output : [] -> return (mode, input, output)
     _ -> getProgName >>= die . usage
 
-  source <- readFile file
-
-  case run mode source of
-    Left message -> die message
-    Right result -> writeFile output result
+  run mode input output

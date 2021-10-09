@@ -4,8 +4,9 @@ Untyped lambda calculus and compilation (through closure conversion, to C and We
 
 ## Dependencies
 
-- [Stack](https://www.haskellstack.org/);
-- [Clang](https://clang.llvm.org/).
+- [`stack`](https://www.haskellstack.org/);
+- [`clang`](https://clang.llvm.org/);
+- [`lld`](https://lld.llvm.org/).
 
 ## Usage
 

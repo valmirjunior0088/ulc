@@ -34,8 +34,12 @@ library
       Ulc.Common.Flattening
       Ulc.Common.Parsing
       Ulc.WebAssembly
+      Ulc.WebAssembly.BitDebug
       Ulc.WebAssembly.Generation
+      Ulc.WebAssembly.Ieee754
+      Ulc.WebAssembly.Leb128
       Ulc.WebAssembly.Serialization
+      Ulc.WebAssembly.Utf8
   other-modules:
       Paths_ulc
   hs-source-dirs:

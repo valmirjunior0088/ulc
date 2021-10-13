@@ -1,5 +1,5 @@
 module Ulc
-  (run
+  ( run
   )
   where
 

@@ -9,8 +9,8 @@ usage name =
   "USAGE: " ++ name ++ " PORT PATH"
 
 app :: FilePath -> Application
-app path =
-  staticApp (defaultFileServerSettings path)
+app =
+  staticApp . defaultFileServerSettings
 
 main :: IO ()
 main = do

@@ -1,5 +1,5 @@
 module Ulc.Common.Parsing
-  (parse
+  ( parse
   )
   where
 
@@ -9,22 +9,22 @@ import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char.Lexer as Lexer
 
 import Ulc.Common.Core
-  (Primitive (..)
-  ,Literal (..)
-  ,Term (..)
-  ,Item (..)
+  ( Primitive (..)
+  , Literal (..)
+  , Term (..)
+  , Item (..)
   )
 
 import Text.Megaparsec
-  (Parsec
-  ,(<|>)
-  ,try
-  ,some
-  ,someTill
-  ,oneOf
-  ,optional
-  ,single
-  ,eof
+  ( Parsec
+  , (<|>)
+  , try
+  , some
+  , someTill
+  , oneOf
+  , optional
+  , single
+  , eof
   )
 
 abstract :: String -> Term -> Term

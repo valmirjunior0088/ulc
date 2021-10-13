@@ -1,12 +1,12 @@
 module Ulc.Common.Flattening
-  (Literal (..)
-  ,Primitive (..)
-  ,Variable (..)
-  ,Term (..)
-  ,Definition (..)
-  ,Abstraction (..)
-  ,Item (..)
-  ,flatten
+  ( Literal (..)
+  , Primitive (..)
+  , Variable (..)
+  , Term (..)
+  , Definition (..)
+  , Abstraction (..)
+  , Item (..)
+  , flatten
   )
   where
 

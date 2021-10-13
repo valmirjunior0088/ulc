@@ -1,10 +1,10 @@
 module Ulc.C.PrettyPrinting
-  (annotated
-  ,pretty
+  ( annotated
+  , pretty
   )
   where
 
-import Ulc.C.Generation (Statement (..), Function (..), Item (..))
+import Ulc.C.Generation (Instruction (..), Function (..), Item (..))
 import Data.List (intercalate)
 
 annotated :: String -> String
@@ -15,34 +15,34 @@ indent :: [String] -> [String]
 indent =
   map ("  " ++)
 
-prettyStatement :: Statement -> String
-prettyStatement statement =
-  case statement of
-    StEnter object ->
+prettyInstruction :: Instruction -> String
+prettyInstruction instruction =
+  case instruction of
+    InEnter object ->
       "object_enter(" ++ object ++ ");"
-    StLeave object ->
+    InLeave object ->
       "object_leave(" ++ object ++ ");"
-    StInteger tmp value ->
+    InInteger tmp value ->
       annotated tmp
         ++ " = object_integer("
         ++ show value
         ++ ");"
-    StIntegerSum tmp left right ->
+    InIntegerSum tmp left right ->
       annotated tmp
         ++ " = object_integer_sum("
         ++ left ++ ", " ++ right
         ++ ");"
-    StReal tmp value ->
+    InReal tmp value ->
       annotated tmp
         ++ " = object_real("
         ++ show value
         ++ ");"
-    StRealSum tmp left right ->
+    InRealSum tmp left right ->
       annotated tmp
         ++ " = object_real_sum("
         ++ left ++ ", " ++ right
         ++ ");"
-    StClosure tmp name variables ->
+    InClosure tmp name variables ->
       if null variables
         then prefix ++ suffix
         else prefix ++ ", " ++ content ++ suffix
@@ -55,35 +55,35 @@ prettyStatement statement =
           intercalate ", " variables
         suffix =
           ");"
-    StApply tmp function argument ->
+    InApply tmp function argument ->
       annotated tmp
         ++ " = object_apply("
         ++ function ++ ", " ++ argument
         ++ ");"
-    StReference tmp name ->
+    InReference tmp name ->
       annotated tmp ++ " = " ++ name ++ "();"
-    StReturn object ->
+    InReturn object ->
       "return " ++ object ++ ";"
-    StNewLine ->
+    InNewLine ->
       ""
 
 prettyArguments :: [String] -> String
 prettyArguments arguments =
   "(" ++ intercalate ", " (map annotated arguments) ++ ")"
 
-prettyFunction :: String -> [String] -> [Statement] -> [String]
-prettyFunction name arguments statements =
+prettyFunction :: String -> [String] -> [Instruction] -> [String]
+prettyFunction name arguments instructions =
   [annotated name ++ prettyArguments arguments ++ " {"]
-    ++ indent (map prettyStatement statements)
+    ++ indent (map prettyInstruction instructions)
     ++ ["}", ""]
 
 prettyAbstraction :: Function -> [String]
-prettyAbstraction (Function name statements) =
-  prettyFunction name ["env[]", "arg"] statements
+prettyAbstraction (Function name instructions) =
+  prettyFunction name ["env[]", "arg"] instructions
 
 prettyDefinition :: Function -> [String]
-prettyDefinition (Function name statements) =
-  prettyFunction name [] statements
+prettyDefinition (Function name instructions) =
+  prettyFunction name [] instructions
 
 pretty :: Item -> [String]
 pretty (Item definition abstractions) =

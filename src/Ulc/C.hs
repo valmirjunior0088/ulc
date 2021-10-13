@@ -1,5 +1,5 @@
 module Ulc.C
-  (run
+  ( run
   )
   where
 
@@ -9,19 +9,19 @@ import Ulc.C.PrettyPrinting (annotated, pretty)
 
 header :: [String]
 header =
-  ["#include \"object.h\""
-  ,""
+  [ "#include \"object.h\""
+  , ""
   ]
 
 footer :: [String]
 footer =
-  ["int main() {"
-  ,"  struct object *result = main$def();"
-  ,"  object_debug(result);"
-  ,"  object_leave(result);"
-  ,""
-  ,"  return 0;"
-  ,"}"
+  [ "int main() {"
+  , "  struct object *result = main$def();"
+  , "  object_debug(result);"
+  , "  object_leave(result);"
+  , ""
+  , "  return 0;"
+  , "}"
   ]
 
 declare :: Item -> String

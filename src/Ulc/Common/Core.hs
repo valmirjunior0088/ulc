@@ -1,11 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Ulc.Common.Core
-  (Literal (..)
-  ,Primitive (..)
-  ,Variable (..)
-  ,Term (..)
-  ,Item (..)
+  ( Literal (..)
+  , Primitive (..)
+  , Variable (..)
+  , Term (..)
+  , Item (..)
   )
   where
 

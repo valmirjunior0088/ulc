@@ -1,7 +1,7 @@
 module Ulc.WebAssembly.BitDebug
-  (showBits
-  ,showByte
-  ,showBytes
+  ( showBits
+  , showByte
+  , showBytes
   )
   where
 

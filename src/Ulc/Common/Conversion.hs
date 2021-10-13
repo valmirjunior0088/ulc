@@ -1,10 +1,10 @@
 module Ulc.Common.Conversion
-  (Literal (..)
-  ,Primitive (..)
-  ,Variable (..)
-  ,Term (..)
-  ,Item (..)
-  ,convert
+  ( Literal (..)
+  , Primitive (..)
+  , Variable (..)
+  , Term (..)
+  , Item (..)
+  , convert
   )
   where
 

@@ -1,10 +1,10 @@
 {-# LANGUAGE BinaryLiterals #-}
 
 module Ulc.WebAssembly.Leb128
-  (uleb128
-  ,uleb128Fixed
-  ,sleb128
-  ,sleb128Fixed
+  ( uleb128
+  , uleb128Fixed
+  , sleb128
+  , sleb128Fixed
   )
   where
 

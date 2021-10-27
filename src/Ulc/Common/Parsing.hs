@@ -52,28 +52,28 @@ abstract name =
 type Parsing a =
   Parsec Void String a
 
-psSpace :: Parsing ()
-psSpace =
+parseSpace :: Parsing ()
+parseSpace =
   Lexer.space space1 spLineComment spBlockComment where
     spLineComment = Lexer.skipLineComment "//"
     spBlockComment = Lexer.skipBlockComment "/*" "*/"
 
-psLexeme :: Parsing a -> Parsing a
-psLexeme parser =
-  Lexer.lexeme psSpace parser
+parseLexeme :: Parsing a -> Parsing a
+parseLexeme parser =
+  Lexer.lexeme parseSpace parser
 
-psSymbol :: String -> Parsing String
-psSymbol string =
-  Lexer.symbol psSpace string
+parseSymbol :: String -> Parsing String
+parseSymbol string =
+  Lexer.symbol parseSpace string
 
-psName :: Parsing String
-psName =
-  psLexeme (some (try (oneOf validCharacters))) where
+parseName :: Parsing String
+parseName =
+  parseLexeme (some (try (oneOf validCharacters))) where
     validCharacters = ['a'..'z'] ++ ['A'..'Z'] ++ ['_']
 
-psLiteral :: Parsing Literal
-psLiteral =
-  psLexeme (try ltReal <|> ltInteger) where
+parseLiteral :: Parsing Literal
+parseLiteral =
+  parseLexeme (try ltReal <|> ltInteger) where
     ltInteger = positive <|> negative where
       positive = LtInteger <$> (optional (single '+') *> Lexer.decimal)
       negative = LtInteger <$> (single '-' *> (negate <$> Lexer.decimal))
@@ -81,52 +81,59 @@ psLiteral =
       positive = LtReal <$> (optional (single '+') *> Lexer.float)
       negative = LtReal <$> (single '-' *> (negate <$> Lexer.float))
 
-psPrimitive :: Parsing Primitive
-psPrimitive =
-  psLexeme (psSymbol "{" *> (integerSum <|> realSum) <* psSymbol "}") where
-    integerSum =
-      PrIntegerSum <$> (psSymbol "integer_sum" *> psClosed) <*> psClosed
-    realSum =
-      PrRealSum <$> (psSymbol "real_sum" *> psClosed) <*> psClosed
+parsePrimitive :: Parsing Primitive
+parsePrimitive =
+  parseLexeme (parseSymbol "{" *> primitive <* parseSymbol "}") where
+    prIntegerSum =
+      PrIntegerSum
+        <$> (parseSymbol "integer_sum" *> parseClosed)
+        <*> parseClosed
+    prRealSum =
+      PrRealSum
+        <$> (parseSymbol "real_sum" *> parseClosed)
+        <*> parseClosed
+    primitive =
+      prIntegerSum <|> prRealSum
 
-psClosed :: Parsing Term
-psClosed =
-  psLexeme (parens <|> literal <|> primitive <|> reference) where
-    parens = psSymbol "(" *> psTerm ")"
-    literal = TrLiteral <$> psLiteral
-    primitive = TrPrimitive <$> psPrimitive
-    reference = TrReference <$> psName
+parseClosed :: Parsing Term
+parseClosed =
+  parseLexeme (trParens <|> trLiteral <|> trPrimitive <|> trReference) where
+    trParens = parseSymbol "(" *> parseTerm ")"
+    trLiteral = TrLiteral <$> parseLiteral
+    trPrimitive = TrPrimitive <$> parsePrimitive
+    trReference = TrReference <$> parseName
 
-psApplication :: String -> Parsing Term
-psApplication terminator = do
-  terms <- someTill psClosed (psSymbol terminator)
+parseApplication :: String -> Parsing Term
+parseApplication terminator = do
+  terms <- someTill parseClosed (parseSymbol terminator)
+
   return $ case terms of
     [] -> error "empty application"
     closed : [] -> closed
     function : arguments -> foldl TrApplication function arguments
 
-psFunction :: String -> Parsing Term
-psFunction terminator =
-  psLexeme (try function) <|> psApplication terminator where
-    function = do
-      name <- psName <* psSymbol "=>"
-      body <- psFunction terminator
+parseFunction :: String -> Parsing Term
+parseFunction terminator =
+  parseLexeme (try trFunction) <|> parseApplication terminator where
+    trFunction = do
+      name <- parseName <* parseSymbol "=>"
+      body <- parseFunction terminator
       return (TrAbstraction $ abstract name body)
 
-psTerm :: String -> Parsing Term
-psTerm =
-  psFunction
+parseTerm :: String -> Parsing Term
+parseTerm =
+  parseFunction
 
-psItem :: Parsing Item
-psItem =
-  Item <$> (psName <* psSymbol "=") <*> psTerm ";"
+parseItem :: Parsing Item
+parseItem =
+  Item <$> (parseName <* parseSymbol "=") <*> parseTerm ";"
 
-psItems :: Parsing [Item]
-psItems =
-  psLexeme (some psItem <* eof)
+parseItems :: Parsing [Item]
+parseItems =
+  parseLexeme (some parseItem <* eof)
 
 parse :: String -> Either String [Item]
 parse source =
-  case Megaparsec.parse psItems "" source of
+  case Megaparsec.parse parseItems "" source of
     Left errorBundle -> Left (Megaparsec.errorBundlePretty errorBundle)
     Right items -> Right items

@@ -7,7 +7,7 @@ import Ulc.WebAssembly.Leb128 (uleb128)
 import Ulc.WebAssembly.Utf8 (utf8)
 import Ulc.WebAssembly.Buffer (Buffer (..))
 import qualified Ulc.WebAssembly.Buffer as Buffer
-import Data.ByteString.Builder (Builder, word8)
+import Data.ByteString.Builder (Builder)
 import qualified Data.ByteString.Builder as Builder
 import Data.Word (Word8, Word32)
 
@@ -53,8 +53,8 @@ class Bufferable a where
 
 bufferedVec :: Bufferable a => [a] -> Buffer
 bufferedVec values =
-  size <> contents where
-    size = Buffer.unsigned (fromIntegral $ length values :: Word32)
+  Buffer.unsigned quantity <> contents where
+    quantity = fromIntegral (length values) :: Word32
     contents = mconcat (map buffered values)
 
 instance Bufferable Word8 where
@@ -106,9 +106,7 @@ instance Bufferable ResultType where
 
 instance Bufferable FuncType where
   buffered (FuncType inputs outputs) =
-    Buffer.byte 0x60
-      <> buffered inputs
-      <> buffered outputs
+    Buffer.byte 0x60 <> buffered inputs <> buffered outputs
 
 instance Bufferable TypeSec where
   buffered (TypeSec types) =
@@ -174,8 +172,8 @@ instance Bufferable ElemSec where
 
 instance Bufferable Locals where
   buffered (Locals names valueType) =
-    Buffer.unsigned (fromIntegral $ length names :: Word32)
-      <> buffered valueType
+    Buffer.unsigned quantity <> buffered valueType where
+      quantity = fromIntegral (length names) :: Word32
 
 instance Bufferable MemArg where
   buffered (MemArg offset alignment) =
@@ -214,7 +212,10 @@ preamble =
 
 section :: Bufferable a => Word8 -> a -> Builder
 section identifier bufferable =
-  word8 identifier <> mconcat (map word8 $ uleb128 size) <> builder where
+  Builder.word8 identifier
+    <> mconcat (map Builder.word8 $ uleb128 size)
+    <> builder
+  where
     Buffer size builder =  buffered bufferable
 
 serialize :: Module -> Builder

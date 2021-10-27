@@ -176,17 +176,17 @@ instance Bufferable Locals where
       quantity = fromIntegral (length names) :: Word32
 
 instance Bufferable MemArg where
-  buffered (MemArg offset alignment) =
-    Buffer.unsigned offset <> Buffer.unsigned alignment
+  buffered (MemArg alignment offset) =
+    Buffer.unsigned alignment <> Buffer.unsigned offset 
 
 instance Bufferable Instr where
   buffered instr =
     case instr of
       InI32Const value -> Buffer.byte 0x41 <> Buffer.signed value
-      InI32Load memArg -> Buffer.byte 0x28 <> buffered memArg
       InI64Const value -> Buffer.byte 0x42 <> Buffer.signed value
       InF32Const value -> Buffer.byte 0x43 <> Buffer.floatingSingle value
       InF64Const value -> Buffer.byte 0x44 <> Buffer.floatingDouble value
+      InI32Load memArg -> Buffer.byte 0x28 <> buffered memArg
       InLocalGet localIdx -> Buffer.byte 0x20 <> buffered localIdx
       InLocalSet localIdx -> Buffer.byte 0x21 <> buffered localIdx
       InLocalTee localIdx -> Buffer.byte 0x22 <> buffered localIdx

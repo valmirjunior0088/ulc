@@ -208,10 +208,10 @@ data MemArg =
 
 data Instr =
   InI32Const Int32 |
-  InI32Load MemArg |
   InI64Const Int64 |
   InF32Const Float |
   InF64Const Double |
+  InI32Load MemArg |
   InLocalGet LocalIdx |
   InLocalSet LocalIdx |
   InLocalTee LocalIdx |

@@ -35,10 +35,13 @@ library
       Ulc.Common.Parsing
       Ulc.WebAssembly
       Ulc.WebAssembly.BitDebug
+      Ulc.WebAssembly.Buffer
       Ulc.WebAssembly.Generation
       Ulc.WebAssembly.Ieee754
       Ulc.WebAssembly.Leb128
+      Ulc.WebAssembly.Module
       Ulc.WebAssembly.Serialization
+      Ulc.WebAssembly.Syntax
       Ulc.WebAssembly.Utf8
   other-modules:
       Paths_ulc

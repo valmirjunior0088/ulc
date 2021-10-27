@@ -1,15 +1,15 @@
 module Ulc.WebAssembly.Ieee754
-  ( ieee754single
-  , ieee754double
+  ( ieee754Single
+  , ieee754Double
   )
   where
 
 import Data.Word (Word32, Word64)
 
-ieee754single :: Float -> Word32
-ieee754single _ =
+ieee754Single :: Float -> Word32
+ieee754Single _ =
   undefined
 
-ieee754double :: Double -> Word64
-ieee754double _ =
+ieee754Double :: Double -> Word64
+ieee754Double _ =
   undefined

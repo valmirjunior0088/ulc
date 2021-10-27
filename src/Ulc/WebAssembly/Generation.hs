@@ -1,324 +1,251 @@
-{-# LANGUAGE NamedFieldPuns #-}
-
 module Ulc.WebAssembly.Generation
-  ( TypeIdx
-  , FuncIdx
-  , ElemIdx
-  , ValueType (..)
-  , FuncType (..)
-  , Func (..)
-  , Instruction (..)
-  , Code (..)
-  , Module (..)
-  , tableOffset
-  , pointerSize
-  , generate
+  ( generate
   )
   where
 
-import Data.List (elemIndex)
-import Control.Monad.State (State, execState, get, put)
-import Data.Word (Word32)
-import Data.Int (Int32)
-
 import Ulc.Common
-  ( Literal (..)
+  ( Variable (..)
+  , Literal (..)
   , Primitive (..)
-  , Variable (..)
   , Term (..)
-  , Definition (..)
   , Abstraction (..)
+  , Definition (..)
   , Item (..)
   , variablesFromSize
   )
 
-type TypeIdx = Word32
-type FuncIdx = Word32
-type ElemIdx = Word32
-type LocalIdx = Word32
+import Ulc.WebAssembly.Module
+  ( FuncIdx (..)
+  , LocalIdx (..)
+  , i32
+  , f32
+  , RefType (..)
+  , Limits (..)
+  , MemArg (..)
+  , Instr (..)
+  , Module (..)
+  , pointerSize
+  )
 
-type Offset = Word32
-type Alignment = Word32
+import Ulc.WebAssembly.Syntax
+  ( Syntax
+  , runSyntax
+  , importFunc
+  , importTable
+  , importMemory
+  , addFunc
+  , addCode
+  , getFunc
+  , getFuncRef
+  , getFuncRefsLength
+  )
 
-data ValueType =
-  I32 |
-  F32
-  deriving (Eq, Show)
-
-data FuncType =
-  FuncType [ValueType] [ValueType]
-  deriving (Eq, Show)
-
-data Func =
-  Func String TypeIdx
-  deriving (Show)
-
-data Instruction =
-  I32Const Int32 |
-  I32Elem ElemIdx |
-  I32Load Offset Alignment |
-  F32Const Float |
-  LocalGet LocalIdx |
-  LocalSet LocalIdx |
-  Call FuncIdx
-  deriving (Show)
-
-data Code =
-  Code [ValueType] [Instruction]
-  deriving (Show)
-
-data Module =
-  Module
-    { mdTypes :: [FuncType]
-    , mdImports :: [Func]
-    , mdFuncs :: [Func]
-    , mdElems :: [FuncIdx]
-    , mdCodes :: [Code]
-    }
-  deriving (Show)
-
-mdEmpty :: Module
-mdEmpty =
-  Module
-    { mdTypes = []
-    , mdImports = []
-    , mdFuncs = []
-    , mdElems = []
-    , mdCodes = []
-    }
-
--- Elem 0 is reserved for the null function pointer
-tableOffset :: Int
-tableOffset = 1
-
--- Wasm32 has a pointer size of 4 bytes
-pointerSize :: Int
-pointerSize = 4
-
-type Generation =
-  State Module
-
-runGeneration :: Generation () -> Module
-runGeneration action =
-  execState action mdEmpty
-
-getType :: [ValueType] -> [ValueType] -> Generation TypeIdx
-getType inputs outputs = do
-  let funcType = FuncType inputs outputs
-
-  modl @ Module { mdTypes } <- get
-  case elemIndex funcType mdTypes of
-    Nothing -> do
-      put modl { mdTypes = mdTypes ++ [funcType] }
-      return (fromIntegral $ length mdTypes)
-    Just typeIdx ->
-      return (fromIntegral typeIdx)
-
-putImport :: String -> [ValueType] -> [ValueType] -> Generation ()
-putImport name inputs outputs = do
-  typeIdx <- getType inputs outputs
-
-  modl @ Module { mdImports } <- get
-  put modl { mdImports = mdImports ++ [Func name typeIdx] }
-
-putFunc :: String -> [ValueType] -> [ValueType] -> Generation ()
-putFunc name inputs outputs = do
-  typeIdx <- getType inputs outputs
-
-  modl @ Module { mdFuncs } <- get
-  put modl { mdFuncs = mdFuncs ++ [Func name typeIdx] }
-
-getFunc :: String -> Generation FuncIdx
-getFunc funcName = do
-  let fnName (Func name _) = name
-
-  Module { mdImports, mdFuncs } <- get
-  case elemIndex funcName (map fnName mdImports) of
-    Just funcIdx -> return (fromIntegral funcIdx)
-    Nothing -> case elemIndex funcName (map fnName mdFuncs) of
-      Just funcIdx -> return (fromIntegral $ length mdImports + funcIdx)
-      Nothing -> error "unknown function name"
-
-getElem :: String -> Generation ElemIdx
-getElem name = do
-  funcIdx <- getFunc name
-
-  modl @ Module { mdElems } <- get
-  case elemIndex funcIdx mdElems of
-    Nothing -> do
-      put modl { mdElems = mdElems ++ [funcIdx] }
-      return (fromIntegral $ tableOffset + length mdElems)
-    Just elemIdx ->
-      return (fromIntegral $ tableOffset + elemIdx)
-
-putCode :: [ValueType] -> [Instruction] -> Generation ()
-putCode locals insts = do
-  modl @ Module { mdCodes } <- get
-  put modl { mdCodes = mdCodes ++ [Code locals insts] }
-
-initialize :: Generation ()
-initialize = do
-  putImport "object_enter" [I32] []
-  putImport "object_leave" [I32] []
-  putImport "object_integer" [I32] [I32]
-  putImport "object_integer_sum" [I32, I32] [I32]
-  putImport "object_real" [F32] [I32]
-  putImport "object_real_sum" [I32, I32] [I32]
+generateRuntimeFuncImports :: Syntax ()
+generateRuntimeFuncImports = do
+  importFunc "env" "object_enter" [i32] []
+  importFunc "env" "object_leave" [i32] []
+  importFunc "env" "object_integer" [i32] [i32]
+  importFunc "env" "object_integer_sum" [i32, i32] [i32]
+  importFunc "env" "object_real" [f32] [i32]
+  importFunc "env" "object_real_sum" [i32, i32] [i32]
   
-  putImport "object_closure_0"
-    [I32] [I32]
+  importFunc "env" "object_closure_0"
+    [i32] [i32]
   
-  putImport "object_closure_1"
-    [I32, I32] [I32]
+  importFunc "env" "object_closure_1"
+    [i32, i32] [i32]
   
-  putImport "object_closure_2"
-    [I32, I32, I32] [I32]
+  importFunc "env" "object_closure_2"
+    [i32, i32, i32] [i32]
   
-  putImport "object_closure_3"
-    [I32, I32, I32, I32] [I32]
+  importFunc "env" "object_closure_3"
+    [i32, i32, i32, i32] [i32]
   
-  putImport "object_closure_4"
-    [I32, I32, I32, I32, I32] [I32]
+  importFunc "env" "object_closure_4"
+    [i32, i32, i32, i32, i32] [i32]
   
-  putImport "object_closure_5"
-    [I32, I32, I32, I32, I32, I32] [I32]
+  importFunc "env" "object_closure_5"
+    [i32, i32, i32, i32, i32, i32] [i32]
   
-  putImport "object_closure_6"
-    [I32, I32, I32, I32, I32, I32, I32] [I32]
+  importFunc "env" "object_closure_6"
+    [i32, i32, i32, i32, i32, i32, i32] [i32]
   
-  putImport "object_closure_7"
-    [I32, I32, I32, I32, I32, I32, I32, I32] [I32]
+  importFunc "env" "object_closure_7"
+    [i32, i32, i32, i32, i32, i32, i32, i32] [i32]
   
-  putImport "object_closure_8"
-    [I32, I32, I32, I32, I32, I32, I32, I32, I32] [I32]
+  importFunc "env" "object_closure_8"
+    [i32, i32, i32, i32, i32, i32, i32, i32, i32] [i32]
   
-  putImport "object_closure_9"
-    [I32, I32, I32, I32, I32, I32, I32, I32, I32, I32] [I32]
+  importFunc "env" "object_closure_9"
+    [i32, i32, i32, i32, i32, i32, i32, i32, i32, i32] [i32]
   
-  putImport "object_apply" [I32, I32] [I32]
-  putImport "object_debug" [I32] []
+  importFunc "env" "object_apply" [i32, i32] [i32]
+  importFunc "env" "object_debug" [i32] []
 
-putAbstractionFunc :: Abstraction -> Generation ()
-putAbstractionFunc (Abstraction name _ _) =
-  putFunc name [I32, I32] [I32]
+generateAbstractionFunc :: Abstraction -> Syntax ()
+generateAbstractionFunc (Abstraction name _ _) =
+  addFunc name [("env", i32), ("arg", i32)] [i32]
 
-putDefinitionFunc :: Definition -> Generation ()
-putDefinitionFunc (Definition name _) =
-  putFunc name [] [I32]
+generateDefinitionFunc :: Definition -> Syntax ()
+generateDefinitionFunc (Definition name _) =
+  addFunc name [] [i32]
 
-putItemFunc :: Item -> Generation ()
-putItemFunc (Item definition abstractions) =
-  mapM_ putAbstractionFunc abstractions >> putDefinitionFunc definition
+generateItemFunc :: Item -> Syntax ()
+generateItemFunc (Item definition abstractions) =
+  mapM_ generateAbstractionFunc abstractions >> generateDefinitionFunc definition
 
-access :: Variable -> [Instruction]
+access :: Variable -> [Instr]
 access variable =
   case variable of
     VrEnvironment index ->
-      [ LocalGet 0
-      , I32Load (fromIntegral $ index * pointerSize) 2
-      ]
+      [InLocalGet localIdx, InI32Load $ MemArg alignment offset] where
+        localIdx = 0
+        alignment = 2
+        offset = fromIntegral (index * pointerSize)
     VrArgument ->
-      [ LocalGet 1
-      ]
+      [InLocalGet localIdx] where
+        localIdx = 1
 
-accessWith :: FuncIdx -> Variable -> [Instruction]
+accessWith :: FuncIdx -> Variable -> [Instr]
 accessWith funcIdx variable =
-  access variable ++ [Call funcIdx]
+  access variable ++ [InCall funcIdx]
 
-emitEnter :: Variable -> Generation [Instruction]
+emitEnter :: Variable -> Syntax [Instr]
 emitEnter variable = do
   enterFunc <- getFunc "object_enter"
   return (accessWith enterFunc variable)
 
-emitEnters :: [Variable] -> Generation [Instruction]
+emitEnters :: [Variable] -> Syntax [Instr]
 emitEnters variables = do
   enterFunc <- getFunc "object_enter"
   return (concatMap (accessWith enterFunc) variables)
 
-emitLeaves :: [Variable] -> Generation [Instruction]
+emitLeaves :: [Variable] -> Syntax [Instr]
 emitLeaves variables = do
   leaveFunc <- getFunc "object_leave"
   return (concatMap (accessWith leaveFunc) variables)
 
-emitTerm :: Term -> Generation [Instruction]
+emitTerm :: Term -> Syntax [Instr]
 emitTerm term =
   case term of
     TrLiteral (LtInteger integer) -> do
-      integerFunc <- getFunc "object_integer"
-      return [I32Const $ fromIntegral integer, Call integerFunc]
+      let constInstrs = [InI32Const $ fromIntegral integer]
+
+      func <- getFunc "object_integer"
+      let callInstrs = [InCall func]
+
+      return (constInstrs ++ callInstrs)
+
     TrLiteral (LtReal real) -> do
-      realFunc <- getFunc "object_real"
-      return [F32Const real, Call realFunc]
+      let constInstrs = [InF32Const real]
+
+      func <- getFunc "object_real"
+      let callInstrs = [InCall func]
+
+      return (constInstrs ++ callInstrs)
+
     TrPrimitive (PrIntegerSum left right) -> do
-      left' <- emitTerm left
-      right' <- emitTerm right
-      integerSumFunc <- getFunc "object_integer_sum"
-      return (left' ++ right' ++ [Call integerSumFunc])
+      leftInstrs <- emitTerm left
+      rightInstrs <- emitTerm right
+
+      func <- getFunc "object_integer_sum"
+      let callInstrs = [InCall func]
+
+      return (leftInstrs ++ rightInstrs ++ callInstrs)
+
     TrPrimitive (PrRealSum left right) -> do
-      left' <- emitTerm left
-      right' <- emitTerm right
-      realSumFunc <- getFunc "object_real_sum"
-      return (left' ++ right' ++ [Call realSumFunc])
+      leftInstrs <- emitTerm left
+      rightInstrs <- emitTerm right
+
+      func <- getFunc "object_real_sum"
+      let callInstrs = [InCall func]
+
+      return (leftInstrs ++ rightInstrs ++ callInstrs)
+
     TrReference reference -> do
-      referenceFunc <- getFunc reference
-      return [Call referenceFunc]
+      func <- getFunc reference
+      let callInstrs = [InCall func]
+
+      return callInstrs
+
     TrVariable variable -> do
-      enterInsts <- emitEnter variable
-      return (enterInsts ++ access variable)
+      enterInstrs <- emitEnter variable
+      return (enterInstrs ++ access variable)
+
     TrClosure name variables -> do
-      enterInsts <- emitEnters variables
-      closureElem <- getElem name
-      closureFunc <- getFunc ("object_closure_" ++ show (length variables))
+      enterInstrs <- emitEnters variables
 
-      let
-        elemInsts = [I32Elem closureElem]
-        variableInsts = concatMap access variables
-        funcInsts = [Call closureFunc]
+      funcRef <- getFuncRef name
+      let funcRefInstrs = [InI32Const funcRef]
+
+      let variableInstrs = concatMap access variables
       
-      return (enterInsts ++ elemInsts ++ variableInsts ++ funcInsts)
+      func <- getFunc $ "object_closure_" ++ show (length variables)
+      let callInstrs = [InCall func]
+      
+      return (enterInstrs ++ funcRefInstrs ++ variableInstrs ++ callInstrs)
+
     TrApplication function argument -> do
-      function' <- emitTerm function
-      argument' <- emitTerm argument
-      applyFunc <- getFunc "object_apply"
-      return (function' ++ argument' ++ [Call applyFunc])
+      functionInstrs <- emitTerm function
+      argumentInstrs <- emitTerm argument
 
-putAbstractionCode :: Abstraction -> Generation ()
-putAbstractionCode (Abstraction _ size term) = do
-  insts <- emitTerm term
-  leaveInsts <- emitLeaves (variablesFromSize size)
-  putCode [] (insts ++ leaveInsts)
+      func <- getFunc "object_apply"
+      let callInstrs = [InCall func]
 
-putDefinitionCode :: Definition -> Generation ()
-putDefinitionCode (Definition _ term) = do
-  insts <- emitTerm term
-  putCode [] insts 
+      return (functionInstrs ++ argumentInstrs ++ callInstrs)
 
-putItemCode :: Item -> Generation ()
-putItemCode (Item definition abstractions) =
-  mapM_ putAbstractionCode abstractions >> putDefinitionCode definition
+generateAbstractionCode :: Abstraction -> Syntax ()
+generateAbstractionCode (Abstraction _ size term) = do
+  instrs <- emitTerm term
+  leaveInstrs <- emitLeaves (variablesFromSize size)
+  addCode [] (instrs ++ leaveInstrs)
 
-putItems :: [Item] -> Generation ()
-putItems items =
-  mapM_ putItemFunc items >> mapM_ putItemCode items
+generateDefinitionCode :: Definition -> Syntax ()
+generateDefinitionCode (Definition _ term) = do
+  instrs <- emitTerm term
+  addCode [] instrs
 
-putMain :: Generation ()
-putMain = do
+generateItemCode :: Item -> Syntax ()
+generateItemCode (Item definition abstractions) =
+  mapM_ generateAbstractionCode abstractions >> generateDefinitionCode definition
+
+generateItems :: [Item] -> Syntax ()
+generateItems items =
+  mapM_ generateItemFunc items >> mapM_ generateItemCode items
+
+generateMain :: Syntax ()
+generateMain = do
   mainDefFunc <- getFunc "main$def"
   debugFunc <- getFunc "object_debug"
   leaveFunc <- getFunc "object_leave"
 
-  putFunc "main" [] [I32]
+  addFunc "main" [] [i32]
 
-  putCode [I32]
-    [ Call mainDefFunc
-    , LocalSet 0
-    , LocalGet 0
-    , Call debugFunc
-    , LocalGet 0
-    , Call leaveFunc
-    , I32Const 0
+  addCode [("object", i32)]
+    [ InCall mainDefFunc
+    , InLocalTee 0
+    , InCall debugFunc
+    , InLocalGet 0
+    , InCall leaveFunc
+    , InI32Const 0
     ]
+
+generateRuntimeTableMemoryImports :: Syntax ()
+generateRuntimeTableMemoryImports = do
+  funcRefsLength <- getFuncRefsLength
+
+  importTable "env" "__indirect_function_table"
+    RtFuncRef (LmUnbounded $ fromIntegral funcRefsLength)
+  
+  importMemory "env" "__linear_memory" (LmUnbounded 1)
+
+generateProgram :: [Item] -> Syntax ()
+generateProgram items = do
+  generateRuntimeFuncImports
+  generateItems items
+  generateRuntimeTableMemoryImports
+  generateMain
 
 generate :: [Item] -> Module
 generate items =
-  runGeneration (initialize >> putItems items >> putMain)
+  runSyntax (generateProgram items)

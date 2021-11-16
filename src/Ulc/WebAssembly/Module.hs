@@ -4,6 +4,12 @@ module Ulc.WebAssembly.Module
   ( TypeIdx (..)
   , FuncIdx (..)
   , LocalIdx (..)
+  , TableIdx (..)
+  , MemIdx (..)
+  , GlobalIdx (..)
+  , DataIdx (..)
+  , SecIdx (..)
+  , SymIdx (..)
 
   , NumberType (..)
   , RefType (..)
@@ -23,7 +29,7 @@ module Ulc.WebAssembly.Module
   , MaxSize
   , Limits (..)
   , TableType (..)
-  , MemoryType (..)
+  , MemType (..)
   , Mutability (..)
   , GlobalType (..)
   , ImportDesc (..)
@@ -35,12 +41,16 @@ module Ulc.WebAssembly.Module
   , FuncSec (..)
   , emptyFuncSec
 
+  , ExportDesc (..)
+  , Export (..)
+  , ExportSec (..)
+  , emptyExportSec
+
   , Elem (..)
   , ElemSec (..)
   , emptyElemSec
 
   , Locals (..)
-  , buildLocals
   , Offset
   , Alignment
   , MemArg (..)
@@ -50,46 +60,78 @@ module Ulc.WebAssembly.Module
   , CodeSec (..)
   , emptyCodeSec
 
+  , Size
+  , SymKind (..)
+  , SymFlag (..)
+  , SymInfo (..)
+  , SymTable (..)
+  , LinkSec (..)
+  , emptyLinkSec
+
   , Module (..)
   , emptyModule
 
-  , tableOffset
-  , pointerSize
+  , RelocType (..)
+  , RelocEntry (..)
+  , RelocSec (..)
   )
   where
 
 import Data.Int (Int32, Int64)
 import Data.Word (Word32)
-import Data.List (groupBy)
 
 newtype TypeIdx =
   TypeIdx Word32
-  deriving (Num, Show)
+  deriving (Num)
 
 newtype FuncIdx =
   FuncIdx Word32
-  deriving (Num, Eq, Show)
+  deriving (Num, Enum, Eq)
 
 newtype LocalIdx =
   LocalIdx Word32
-  deriving (Num, Show)
+  deriving (Num)
+
+newtype TableIdx =
+  TableIdx Word32
+  deriving (Num)
+
+newtype MemIdx =
+  MemIdx Word32
+  deriving (Num)
+
+newtype GlobalIdx =
+  GlobalIdx Word32
+  deriving (Num)
+
+newtype DataIdx =
+  DataIdx Word32
+  deriving (Num)
+
+newtype SecIdx =
+  SecIdx Word32
+  deriving (Num, Enum)
+
+newtype SymIdx =
+  SymIdx Word32
+  deriving (Num)
 
 data NumberType =
   NtI32 |
   NtI64 |
   NtF32 |
   NtF64
-  deriving (Eq, Show)
+  deriving (Eq)
 
 data RefType =
-  RtFuncRef |
-  RtExternRef
-  deriving (Eq, Show)
+  RfFuncRef |
+  RfExternRef
+  deriving (Eq)
 
 data ValueType =
   VtNumberType NumberType |
   VtRefType RefType
-  deriving (Eq, Show)
+  deriving (Eq)
 
 i32 :: ValueType
 i32 = VtNumberType NtI32
@@ -104,22 +146,21 @@ f64 :: ValueType
 f64 = VtNumberType NtF64
 
 funcRef :: ValueType
-funcRef = VtRefType RtFuncRef
+funcRef = VtRefType RfFuncRef
 
 externRef :: ValueType
-externRef = VtRefType RtExternRef
+externRef = VtRefType RfExternRef
 
 newtype ResultType =
   ResultType [ValueType]
-  deriving (Eq, Show)
+  deriving (Eq)
 
 data FuncType =
   FuncType ResultType ResultType
-  deriving (Eq, Show)
+  deriving (Eq)
 
 newtype TypeSec =
   TypeSec [FuncType]
-  deriving (Show)
 
 emptyTypeSec :: TypeSec
 emptyTypeSec = TypeSec []
@@ -130,84 +171,80 @@ type MaxSize = Word32
 data Limits =
   LmUnbounded MinSize |
   LmBounded MinSize MaxSize
-  deriving (Show)
 
 data TableType =
   TableType RefType Limits
-  deriving (Show)
 
-newtype MemoryType =
-  MemoryType Limits
-  deriving (Show)
+newtype MemType =
+  MemType Limits
 
 data Mutability =
   MtConst |
   MtVar
-  deriving (Show)
 
 data GlobalType =
   GlobalType ValueType Mutability
-  deriving (Show)
 
 data ImportDesc =
   IdFunc TypeIdx |
   IdTable TableType |
-  IdMemory MemoryType |
+  IdMem MemType |
   IdGlobal GlobalType
-  deriving (Show)
 
 data Import =
   Import String String ImportDesc
-  deriving (Show)
 
 newtype ImportSec =
   ImportSec [Import]
-  deriving (Show)
 
 emptyImportSec :: ImportSec
 emptyImportSec = ImportSec []
 
 data Func =
-  Func String [String] TypeIdx
-  deriving (Show)
+  Func String TypeIdx
 
 newtype FuncSec =
   FuncSec [Func]
-  deriving (Show)
 
 emptyFuncSec :: FuncSec
 emptyFuncSec = FuncSec []
 
+data ExportDesc =
+  EdFunc FuncIdx |
+  EdTable TableIdx |
+  EdMem MemIdx |
+  EdGlobal GlobalIdx
+
+data Export =
+  Export String ExportDesc
+
+newtype ExportSec =
+  ExportSec [Export]
+
+emptyExportSec :: ExportSec
+emptyExportSec = ExportSec []
+
 data Elem =
   Elem Expr [FuncIdx]
-  deriving (Show)
 
 newtype ElemSec =
   ElemSec [Elem]
-  deriving (Show)
 
 emptyElemSec :: ElemSec
 emptyElemSec = ElemSec []
 
 data Locals =
-  Locals [String] ValueType
-  deriving (Show)
-
-buildLocals :: [(String, ValueType)] -> [Locals]
-buildLocals =
-  map transform . groupBy predicate where
-    predicate (_, valueType) (_, valueType') = valueType == valueType'
-    transform locals = Locals (map fst locals) (snd $ head locals)
+  Locals Word32 ValueType
 
 type Alignment = Word32
 type Offset = Word32
 
 data MemArg =
   MemArg Alignment Offset
-  deriving (Show)
 
 data Instr =
   InI32Const Int32 |
+  InI32FuncRef Int32 SymIdx |
   InI64Const Int64 |
   InF32Const Float |
   InF64Const Double |
@@ -215,33 +252,65 @@ data Instr =
   InLocalGet LocalIdx |
   InLocalSet LocalIdx |
   InLocalTee LocalIdx |
-  InCall FuncIdx
-  deriving (Show)
+  InCall FuncIdx SymIdx
 
 newtype Expr =
   Expr [Instr]
-  deriving (Show)
 
 data Code =
   Code [Locals] Expr
-  deriving (Show)
 
 newtype CodeSec =
   CodeSec [Code]
-  deriving (Show)
 
 emptyCodeSec :: CodeSec
 emptyCodeSec = CodeSec []
+
+type Size = Word32
+
+data SymKind =
+  SkFunction FuncIdx (Maybe String) |
+  SkData String (Maybe DataIdx) (Maybe Offset) (Maybe Size)
+
+data SymFlag =
+  SfVisibilityHidden |
+  SfUndefined |
+  SfExported |
+  SfExplicitName
+  deriving (Eq)
+
+data SymInfo =
+  SymInfo SymKind [SymFlag]
+
+newtype SymTable =
+  SymTable [SymInfo]
+
+data LinkSec =
+  LinkSec SymTable
+
+emptyLinkSec :: LinkSec
+emptyLinkSec = LinkSec (SymTable [])
+
+data RelocType =
+  RlFunctionIndexLeb |
+  RlTableIndexSleb
+
+data RelocEntry =
+  RelocEntry RelocType Offset SymIdx
+
+data RelocSec =
+  RelocSec String SecIdx [RelocEntry]
 
 data Module =
   Module
     { mdTypes :: TypeSec
     , mdImports :: ImportSec
     , mdFuncs :: FuncSec
+    , mdExports :: ExportSec
     , mdElems :: ElemSec
     , mdCodes :: CodeSec
+    , mdLink :: LinkSec
     }
-  deriving (Show)
 
 emptyModule :: Module
 emptyModule =
@@ -249,14 +318,8 @@ emptyModule =
     { mdTypes = emptyTypeSec
     , mdImports = emptyImportSec
     , mdFuncs = emptyFuncSec
+    , mdExports = emptyExportSec
     , mdElems = emptyElemSec
     , mdCodes = emptyCodeSec
+    , mdLink = emptyLinkSec
     }
-
--- Elem 0 is reserved for the null function pointer
-tableOffset :: Int
-tableOffset = 1
-
--- Wasm32 has a pointer size of 4 bytes
-pointerSize :: Int
-pointerSize = 4

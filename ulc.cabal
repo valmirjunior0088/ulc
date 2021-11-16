@@ -40,6 +40,7 @@ library
       Ulc.WebAssembly.Ieee754
       Ulc.WebAssembly.Leb128
       Ulc.WebAssembly.Module
+      Ulc.WebAssembly.RelocBuffer
       Ulc.WebAssembly.Serialization
       Ulc.WebAssembly.Syntax
       Ulc.WebAssembly.Utf8

@@ -15,236 +15,231 @@ import Ulc.Common
   )
 
 import Ulc.WebAssembly.Module
-  ( FuncIdx (..)
-  , LocalIdx (..)
-  , i32
+  ( i32
   , f32
   , RefType (..)
   , Limits (..)
-  , MemArg (..)
   , Instr (..)
   , Module (..)
-  , pointerSize
   )
 
 import Ulc.WebAssembly.Syntax
   ( Syntax
   , runSyntax
-  , importFunc
-  , importTable
-  , importMemory
-  , addFunc
-  , addCode
-  , getFunc
-  , getFuncRef
+  , putTableImport
+  , putMemImport
+  , putCode
   , getFuncRefsLength
+  , i32Const
+  , i32FuncRef
+  , f32Const
+  , i32Load
+  , localGet
+  , localTee
+  , call
+  , addFuncImport
+  , addFunc
+  , addExportedFunc
   )
+
+-- Wasm32 has a pointer size of 4 bytes
+pointerSize :: Int
+pointerSize = 4
 
 generateRuntimeFuncImports :: Syntax ()
 generateRuntimeFuncImports = do
-  importFunc "env" "object_enter" [i32] []
-  importFunc "env" "object_leave" [i32] []
-  importFunc "env" "object_integer" [i32] [i32]
-  importFunc "env" "object_integer_sum" [i32, i32] [i32]
-  importFunc "env" "object_real" [f32] [i32]
-  importFunc "env" "object_real_sum" [i32, i32] [i32]
+  addFuncImport "env" "object_enter" [i32] []
+  addFuncImport "env" "object_leave" [i32] []
+  addFuncImport "env" "object_integer" [i32] [i32]
+  addFuncImport "env" "object_integer_sum" [i32, i32] [i32]
+  addFuncImport "env" "object_real" [f32] [i32]
+  addFuncImport "env" "object_real_sum" [i32, i32] [i32]
   
-  importFunc "env" "object_closure_0"
+  addFuncImport "env" "object_closure_0"
     [i32] [i32]
   
-  importFunc "env" "object_closure_1"
+  addFuncImport "env" "object_closure_1"
     [i32, i32] [i32]
   
-  importFunc "env" "object_closure_2"
+  addFuncImport "env" "object_closure_2"
     [i32, i32, i32] [i32]
   
-  importFunc "env" "object_closure_3"
+  addFuncImport "env" "object_closure_3"
     [i32, i32, i32, i32] [i32]
   
-  importFunc "env" "object_closure_4"
+  addFuncImport "env" "object_closure_4"
     [i32, i32, i32, i32, i32] [i32]
   
-  importFunc "env" "object_closure_5"
+  addFuncImport "env" "object_closure_5"
     [i32, i32, i32, i32, i32, i32] [i32]
   
-  importFunc "env" "object_closure_6"
+  addFuncImport "env" "object_closure_6"
     [i32, i32, i32, i32, i32, i32, i32] [i32]
   
-  importFunc "env" "object_closure_7"
+  addFuncImport "env" "object_closure_7"
     [i32, i32, i32, i32, i32, i32, i32, i32] [i32]
   
-  importFunc "env" "object_closure_8"
+  addFuncImport "env" "object_closure_8"
     [i32, i32, i32, i32, i32, i32, i32, i32, i32] [i32]
   
-  importFunc "env" "object_closure_9"
+  addFuncImport "env" "object_closure_9"
     [i32, i32, i32, i32, i32, i32, i32, i32, i32, i32] [i32]
   
-  importFunc "env" "object_apply" [i32, i32] [i32]
-  importFunc "env" "object_debug" [i32] []
+  addFuncImport "env" "object_apply" [i32, i32] [i32]
+  addFuncImport "env" "object_debug" [i32] []
 
 generateAbstractionFunc :: Abstraction -> Syntax ()
-generateAbstractionFunc (Abstraction name _ _) =
-  addFunc name [("env", i32), ("arg", i32)] [i32]
+generateAbstractionFunc (Abstraction name _ _) = do
+  addFunc name [i32, i32] [i32]
 
 generateDefinitionFunc :: Definition -> Syntax ()
 generateDefinitionFunc (Definition name _) =
   addFunc name [] [i32]
 
 generateItemFunc :: Item -> Syntax ()
-generateItemFunc (Item definition abstractions) =
-  mapM_ generateAbstractionFunc abstractions >> generateDefinitionFunc definition
+generateItemFunc (Item definition abstractions) = do
+  mapM_ generateAbstractionFunc abstractions
+  generateDefinitionFunc definition
 
-access :: Variable -> [Instr]
+generateItemsFuncs :: [Item] -> Syntax ()
+generateItemsFuncs =
+  mapM_ generateItemFunc
+
+access :: Variable -> Syntax [Instr]
 access variable =
   case variable of
     VrEnvironment index ->
-      [InLocalGet localIdx, InI32Load $ MemArg alignment offset] where
+      sequence [localGet localIdx, i32Load alignment offset] where
         localIdx = 0
         alignment = 2
         offset = fromIntegral (index * pointerSize)
     VrArgument ->
-      [InLocalGet localIdx] where
+      sequence [localGet localIdx] where
         localIdx = 1
-
-accessWith :: FuncIdx -> Variable -> [Instr]
-accessWith funcIdx variable =
-  access variable ++ [InCall funcIdx]
 
 emitEnter :: Variable -> Syntax [Instr]
 emitEnter variable = do
-  enterFunc <- getFunc "object_enter"
-  return (accessWith enterFunc variable)
+  accessIntrs <- access variable
+  callInstrs <- return <$> call "object_enter"
+  return (accessIntrs ++ callInstrs)
 
 emitEnters :: [Variable] -> Syntax [Instr]
 emitEnters variables = do
-  enterFunc <- getFunc "object_enter"
-  return (concatMap (accessWith enterFunc) variables)
+  concat <$> mapM emitEnter variables
+
+emitLeave :: Variable -> Syntax [Instr]
+emitLeave variable = do
+  leaveInstrs <- access variable
+  callInstrs <- return <$> call "object_leave"
+  return (leaveInstrs ++ callInstrs)
 
 emitLeaves :: [Variable] -> Syntax [Instr]
 emitLeaves variables = do
-  leaveFunc <- getFunc "object_leave"
-  return (concatMap (accessWith leaveFunc) variables)
+  concat <$> mapM emitLeave variables
 
 emitTerm :: Term -> Syntax [Instr]
 emitTerm term =
   case term of
-    TrLiteral (LtInteger integer) -> do
-      let constInstrs = [InI32Const $ fromIntegral integer]
-
-      func <- getFunc "object_integer"
-      let callInstrs = [InCall func]
-
+    TrLiteral (LtInteger value) -> do
+      constInstrs <- return <$> i32Const (fromIntegral value)
+      callInstrs <- return <$> call "object_integer"
       return (constInstrs ++ callInstrs)
 
-    TrLiteral (LtReal real) -> do
-      let constInstrs = [InF32Const real]
-
-      func <- getFunc "object_real"
-      let callInstrs = [InCall func]
-
+    TrLiteral (LtReal value) -> do
+      constInstrs <- return <$> f32Const value
+      callInstrs <- return <$> call "object_real"
       return (constInstrs ++ callInstrs)
 
     TrPrimitive (PrIntegerSum left right) -> do
       leftInstrs <- emitTerm left
       rightInstrs <- emitTerm right
-
-      func <- getFunc "object_integer_sum"
-      let callInstrs = [InCall func]
-
+      callInstrs <- return <$> call "object_integer_sum"
       return (leftInstrs ++ rightInstrs ++ callInstrs)
 
     TrPrimitive (PrRealSum left right) -> do
       leftInstrs <- emitTerm left
       rightInstrs <- emitTerm right
-
-      func <- getFunc "object_real_sum"
-      let callInstrs = [InCall func]
-
+      callInstrs <- return <$> call "object_real_sum"
       return (leftInstrs ++ rightInstrs ++ callInstrs)
 
-    TrReference reference -> do
-      func <- getFunc reference
-      let callInstrs = [InCall func]
-
-      return callInstrs
+    TrReference reference ->
+      return <$> call reference
 
     TrVariable variable -> do
       enterInstrs <- emitEnter variable
-      return (enterInstrs ++ access variable)
+      accessInstrs <- access variable
+      return (enterInstrs ++ accessInstrs)
 
     TrClosure name variables -> do
       enterInstrs <- emitEnters variables
+      funcRefInstrs <- return <$> i32FuncRef name
+      variablesInstrs <- concat <$> mapM access variables
 
-      funcRef <- getFuncRef name
-      let funcRefInstrs = [InI32Const funcRef]
-
-      let variableInstrs = concatMap access variables
+      let funcName = "object_closure_" ++ show (length variables)
+      callInstrs <- return <$> call funcName
       
-      func <- getFunc $ "object_closure_" ++ show (length variables)
-      let callInstrs = [InCall func]
-      
-      return (enterInstrs ++ funcRefInstrs ++ variableInstrs ++ callInstrs)
+      return (enterInstrs ++ funcRefInstrs ++ variablesInstrs ++ callInstrs)
 
     TrApplication function argument -> do
       functionInstrs <- emitTerm function
       argumentInstrs <- emitTerm argument
-
-      func <- getFunc "object_apply"
-      let callInstrs = [InCall func]
-
+      callInstrs <- return <$> call "object_apply"
       return (functionInstrs ++ argumentInstrs ++ callInstrs)
 
 generateAbstractionCode :: Abstraction -> Syntax ()
 generateAbstractionCode (Abstraction _ size term) = do
   instrs <- emitTerm term
   leaveInstrs <- emitLeaves (variablesFromSize size)
-  addCode [] (instrs ++ leaveInstrs)
+  putCode [] (instrs ++ leaveInstrs)
 
 generateDefinitionCode :: Definition -> Syntax ()
 generateDefinitionCode (Definition _ term) = do
   instrs <- emitTerm term
-  addCode [] instrs
+  putCode [] instrs
 
 generateItemCode :: Item -> Syntax ()
-generateItemCode (Item definition abstractions) =
-  mapM_ generateAbstractionCode abstractions >> generateDefinitionCode definition
+generateItemCode (Item definition abstractions) = do
+  mapM_ generateAbstractionCode abstractions
+  generateDefinitionCode definition
 
-generateItems :: [Item] -> Syntax ()
-generateItems items =
-  mapM_ generateItemFunc items >> mapM_ generateItemCode items
+generateItemsCodes :: [Item] -> Syntax ()
+generateItemsCodes =
+  mapM_ generateItemCode
 
-generateMain :: Syntax ()
-generateMain = do
-  mainDefFunc <- getFunc "main$def"
-  debugFunc <- getFunc "object_debug"
-  leaveFunc <- getFunc "object_leave"
+generateRuntimeTableMemImports :: Syntax ()
+generateRuntimeTableMemImports = do
+  tableLimits <- LmUnbounded . fromIntegral <$> getFuncRefsLength
+  putTableImport "env" "__indirect_function_table" RfFuncRef tableLimits
+  putMemImport "env" "__linear_memory" (LmUnbounded 1)
 
-  addFunc "main" [] [i32]
+generateMainFunc :: Syntax ()
+generateMainFunc =
+  addExportedFunc "main" [] [i32]
 
-  addCode [("object", i32)]
-    [ InCall mainDefFunc
-    , InLocalTee 0
-    , InCall debugFunc
-    , InLocalGet 0
-    , InCall leaveFunc
-    , InI32Const 0
+generateMainCode :: Syntax ()
+generateMainCode = do
+  instrs <- sequence
+    [ call "main$def"
+    , localTee 0
+    , call "object_debug"
+    , localGet 0
+    , call "object_leave"
+    , i32Const 0
     ]
-
-generateRuntimeTableMemoryImports :: Syntax ()
-generateRuntimeTableMemoryImports = do
-  funcRefsLength <- getFuncRefsLength
-
-  importTable "env" "__indirect_function_table"
-    RtFuncRef (LmUnbounded $ fromIntegral funcRefsLength)
   
-  importMemory "env" "__linear_memory" (LmUnbounded 1)
+  putCode [i32] instrs
 
 generateProgram :: [Item] -> Syntax ()
 generateProgram items = do
   generateRuntimeFuncImports
-  generateItems items
-  generateRuntimeTableMemoryImports
-  generateMain
+
+  generateItemsFuncs items
+  generateMainFunc
+
+  generateItemsCodes items
+  generateMainCode
+
+  generateRuntimeTableMemImports
 
 generate :: [Item] -> Module
 generate items =

@@ -22,4 +22,5 @@ wasm/output.wasm: wasm/memory.o wasm/object.o wasm/program.o
 	@wasm-ld wasm/memory.o wasm/object.o wasm/program.o -o wasm/output.wasm --allow-undefined --entry main -O3
 
 wasm: wasm/output.wasm
+	@echo "Started server on http://localhost:8080"
 	@stack exec ulc-server 8080 wasm

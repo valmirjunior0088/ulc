@@ -7,6 +7,7 @@ module Ulc.WebAssembly.Buffer
   , signedFixed
   , floatingSingle
   , floatingDouble
+  , prependSize
   )
   where
 
@@ -64,3 +65,7 @@ floatingSingle value =
 floatingDouble :: Double -> Buffer
 floatingDouble value =
   Buffer 8 (word64LE $ ieee754Double value)
+
+prependSize :: Buffer -> Buffer
+prependSize buffer =
+  let Buffer size _ = buffer in unsigned size <> buffer

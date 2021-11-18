@@ -91,7 +91,7 @@ uleb128Fixed width =
 
 uleb128Builder :: Uleb128 a => a -> Builder
 uleb128Builder =
-  mconcat . map word8 . finish . uleb128Bytes
+  mconcat . map word8 . uleb128
 
 sleb128 :: Sleb128 a => a -> [Word8]
 sleb128 =

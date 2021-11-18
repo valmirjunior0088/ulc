@@ -4,6 +4,7 @@ module Ulc.WebAssembly.Leb128
   ( Uleb128
   , uleb128
   , uleb128Fixed
+  , uleb128Builder
   , Sleb128
   , sleb128
   , sleb128Fixed
@@ -13,6 +14,7 @@ module Ulc.WebAssembly.Leb128
 import Data.Bits (Bits, (.&.), (.|.), shiftR)
 import Data.Word (Word8, Word16, Word32, Word64)
 import Data.Int (Int8, Int16, Int32, Int64)
+import Data.ByteString.Builder (Builder, word8)
 
 class (Bits a, Integral a) => Leb128 a
 instance Leb128 Word
@@ -86,6 +88,10 @@ uleb128 =
 uleb128Fixed :: Uleb128 a => Int -> a -> [Word8]
 uleb128Fixed width =
   finishFixed width . uleb128Bytes
+
+uleb128Builder :: Uleb128 a => a -> Builder
+uleb128Builder =
+  mconcat . map word8 . finish . uleb128Bytes
 
 sleb128 :: Sleb128 a => a -> [Word8]
 sleb128 =

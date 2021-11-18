@@ -3,9 +3,10 @@ module Ulc.WebAssembly.Serialization
   )
   where
 
+import Ulc.WebAssembly.Leb128 (uleb128Builder)
 import Ulc.WebAssembly.Utf8 (utf8)
 import Data.Word (Word8, Word32)
-import Data.ByteString.Builder (Builder, stringUtf8, int32LE)
+import Data.ByteString.Builder (Builder, word8, stringUtf8, int32LE)
 
 import Ulc.WebAssembly.Module
   ( TypeIdx (..)
@@ -112,6 +113,20 @@ relocBufferedVec values =
     quantity = fromIntegral (length values) :: Word32
     contents = mconcat (map relocBuffered values)
 
+class Buildable a where
+  built :: a -> Builder
+
+wrapSec :: Word8 -> Buffer -> Builder
+wrapSec identifier (Buffer size builder) =
+  word8 identifier <> uleb128Builder size <> builder
+
+class RelocBuildable a where
+  relocBuilt :: a -> (Builder, [RelocEntry])
+
+wrapRelocSec :: Word8 -> RelocBuffer -> (Builder, [RelocEntry])
+wrapRelocSec identifier (RelocBuffer buffer entries) =
+  (wrapSec identifier buffer, entries)
+
 instance Bufferable TypeIdx where
   buffered (TypeIdx typeIdx) =
     unsigned typeIdx
@@ -176,9 +191,9 @@ instance Bufferable FuncType where
   buffered (FuncType inputs outputs) =
     byte 0x60 <> buffered inputs <> buffered outputs
 
-instance Bufferable TypeSec where
-  buffered (TypeSec types) =
-    byte 1 <> prependSize (bufferedVec types)
+instance Buildable TypeSec where
+  built (TypeSec types) =
+    wrapSec 1 (bufferedVec types)
 
 instance Bufferable Limits where
   buffered limits =
@@ -218,17 +233,17 @@ instance Bufferable Import where
   buffered (Import name namespace imptDesc) =
     bufferedName name <> bufferedName namespace <> buffered imptDesc
 
-instance Bufferable ImportSec where
-  buffered (ImportSec imports) =
-    byte 2 <> prependSize (bufferedVec imports)
+instance Buildable ImportSec where
+  built (ImportSec imports) =
+    wrapSec 2 (bufferedVec imports)
 
 instance Bufferable Func where
   buffered (Func _ typeIdx) =
     buffered typeIdx
 
-instance Bufferable FuncSec where
-  buffered (FuncSec funcs) =
-    byte 3 <> prependSize (bufferedVec funcs)
+instance Buildable FuncSec where
+  built (FuncSec funcs) =
+    wrapSec 3 (bufferedVec funcs)
 
 instance Bufferable ExportDesc where
   buffered exportDesc =
@@ -242,9 +257,9 @@ instance Bufferable Export where
   buffered (Export name exportDesc) =
     bufferedName name <> buffered exportDesc
 
-instance Bufferable ExportSec where
-  buffered (ExportSec exports) =
-    byte 7 <> prependSize (bufferedVec exports)
+instance Buildable ExportSec where
+  built (ExportSec exports) =
+    wrapSec 7 (bufferedVec exports)
 
 instance Bufferable Elem where
   buffered (Elem offsetExpr funcIdxs) =
@@ -252,9 +267,9 @@ instance Bufferable Elem where
       <> let RelocBuffer buffer _ = relocBuffered offsetExpr in buffer
       <> bufferedVec funcIdxs
 
-instance Bufferable ElemSec where
-  buffered (ElemSec elems) =
-    byte 9 <> prependSize (bufferedVec elems)
+instance Buildable ElemSec where
+  built (ElemSec elems) =
+    wrapSec 9 (bufferedVec elems)
 
 instance Bufferable Locals where
   buffered (Locals quantity valueType) =
@@ -311,10 +326,9 @@ instance RelocBufferable Code where
   relocBuffered (Code locals expr) =
     relocPrependSize (RelocBuffer (bufferedVec locals) [] <> relocBuffered expr)
 
-instance RelocBufferable CodeSec where
-  relocBuffered (CodeSec codes) =
-    RelocBuffer (byte 10 <> prependSize buffer) entries where
-      RelocBuffer buffer entries = relocBufferedVec codes
+instance RelocBuildable CodeSec where
+  relocBuilt (CodeSec codes) =
+    wrapRelocSec 10 (relocBufferedVec codes)
 
 packSymFlags :: [SymFlag] -> Word32
 packSymFlags flags =
@@ -346,12 +360,11 @@ instance Bufferable SymTable where
   buffered (SymTable symInfos) =
     byte 8 <> prependSize (bufferedVec symInfos)
 
-instance Bufferable LinkSec where
-  buffered (LinkSec symTable) =
-    byte 0 <> prependSize contents where
+instance Buildable LinkSec where
+  built (LinkSec symTable) =
+    wrapSec 0 (name <> version <> buffered symTable) where
       name = bufferedName "linking" 
       version = unsigned (2 :: Word32)
-      contents = name <> version <> buffered symTable
 
 instance Bufferable RelocType where
   buffered relocType =
@@ -363,14 +376,13 @@ instance Bufferable RelocEntry where
   buffered (RelocEntry relocType offset symIdx) =
     buffered relocType <> unsigned offset <> buffered symIdx
 
-instance Bufferable RelocSec where
-  buffered (RelocSec suffix secIdx entries) =
-    byte 0 <> prependSize contents where
+instance Buildable RelocSec where
+  built (RelocSec suffix secIdx entries) =
+    wrapSec 0 (name <> buffered secIdx <> bufferedVec entries) where
       name = bufferedName ("reloc." ++ suffix)
-      contents = name <> buffered secIdx <> bufferedVec entries
 
-instance Bufferable Module where
-  buffered modl =
+instance Buildable Module where
+  built modl =
     let
       Module
         { mdTypes = typeSec
@@ -383,24 +395,25 @@ instance Bufferable Module where
         }
         = modl
       
-      typeBuffer = buffered typeSec -- 0
-      importBuffer = buffered importSec -- 1
-      funcBuffer = buffered funcSec -- 2
-      exportBuffer = buffered exportSec -- 3
-      elemBuffer = buffered elemSec -- 4
-      RelocBuffer codeBuffer codeRelocs = relocBuffered codeSec -- 5
-      linkBuffer = buffered linkSec -- 6
-      codeRelocBuffer = buffered (RelocSec "CODE" 5 codeRelocs) -- 7
+      typeBuilder = built typeSec -- 0
+      importBuilder = built importSec -- 1
+      funcBuilder = built funcSec -- 2
+      exportBuilder = built exportSec -- 3
+      elemBuilder = built elemSec -- 4
+      (codeBuilder, codeRelocs) = relocBuilt codeSec -- 5
+      linkBuilder = built linkSec -- 6
+      codeRelocBuilder = built (RelocSec "CODE" 5 codeRelocs) -- 7
     in
-      typeBuffer
-        <> importBuffer
-        <> funcBuffer
-        <> exportBuffer
-        <> elemBuffer
-        <> codeBuffer
-        <> linkBuffer
-        <> codeRelocBuffer
+      preamble
+        <> typeBuilder
+        <> importBuilder
+        <> funcBuilder
+        <> exportBuilder
+        <> elemBuilder
+        <> codeBuilder
+        <> linkBuilder
+        <> codeRelocBuilder
 
 serialize :: Module -> Builder
 serialize modl =
-  let Buffer _ builder = buffered modl in preamble <> builder
+  built modl

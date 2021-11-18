@@ -6,9 +6,9 @@ module Ulc.WebAssembly
 import Ulc.Common (Item)
 import Ulc.WebAssembly.Generation (generate)
 import Ulc.WebAssembly.Serialization (serialize)
-import Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy (ByteString, writeFile)
 import Data.ByteString.Builder (toLazyByteString)
-import qualified Data.ByteString.Lazy as ByteString
+import Prelude hiding (writeFile)
 
 compile :: [Item] -> ByteString
 compile items =
@@ -16,4 +16,4 @@ compile items =
 
 run :: FilePath -> [Item] -> IO ()
 run output items =
-  ByteString.writeFile output (compile items)
+  writeFile output (compile items)

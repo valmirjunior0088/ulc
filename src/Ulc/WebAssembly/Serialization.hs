@@ -79,7 +79,8 @@ import Ulc.WebAssembly.Buffer
 
 import Ulc.WebAssembly.RelocBuffer
   ( RelocBuffer (..)
-  , relocWrap
+  , relocEmpty
+  , relocSingleton
   , relocPrependSize
   )
 
@@ -110,7 +111,7 @@ class RelocBufferable a where
 
 relocBufferedVec :: RelocBufferable a => [a] -> RelocBuffer
 relocBufferedVec values =
-  relocWrap (unsigned quantity) <> contents where
+  relocEmpty (unsigned quantity) <> contents where
     quantity = fromIntegral (length values) :: Word32
     contents = mconcat (map relocBuffered values)
 
@@ -284,48 +285,44 @@ instance RelocBufferable Instr where
   relocBuffered instr =
     case instr of
       InI32Const value ->
-        relocWrap (byte 0x41 <> signed value)
+        relocEmpty (byte 0x41 <> signed value)
 
       InI32FuncRef value symIdx ->
-        relocInstr <> relocValue where
-          relocInstr = relocWrap (byte 0x41)
-          relocEntry = RelocEntry RlTableIndexSleb 0 symIdx
-          relocValue = RelocBuffer (signedFixed 5 value) [relocEntry]
+        relocEmpty (byte 0x41)
+          <> relocSingleton (signedFixed 5 value) RlTableIndexSleb symIdx
 
       InI64Const value ->
-        relocWrap (byte 0x42 <> signed value)
+        relocEmpty (byte 0x42 <> signed value)
 
       InF32Const value ->
-        relocWrap (byte 0x43 <> floatingSingle value)
+        relocEmpty (byte 0x43 <> floatingSingle value)
 
       InF64Const value ->
-        relocWrap (byte 0x44 <> floatingDouble value)
+        relocEmpty (byte 0x44 <> floatingDouble value)
 
       InI32Load memArg ->
-        relocWrap (byte 0x28 <> buffered memArg)
+        relocEmpty (byte 0x28 <> buffered memArg)
 
       InLocalGet localIdx ->
-        relocWrap (byte 0x20 <> buffered localIdx)
+        relocEmpty (byte 0x20 <> buffered localIdx)
 
       InLocalSet localIdx ->
-        relocWrap (byte 0x21 <> buffered localIdx)
+        relocEmpty (byte 0x21 <> buffered localIdx)
 
       InLocalTee localIdx ->
-        relocWrap (byte 0x22 <> buffered localIdx)
+        relocEmpty (byte 0x22 <> buffered localIdx)
 
       InCall (FuncIdx funcIdx) symIdx ->
-        relocInstr <> relocValue where
-          relocInstr = relocWrap (byte 0x10)
-          relocEntry = RelocEntry RlFunctionIndexLeb 0 symIdx
-          relocValue = RelocBuffer (unsignedFixed 5 funcIdx) [relocEntry]
+        relocEmpty (byte 0x10)
+          <> relocSingleton (unsignedFixed 5 funcIdx) RlFunctionIndexLeb symIdx
 
 instance RelocBufferable Expr where
   relocBuffered (Expr instrs) =
-    mconcat (map relocBuffered instrs) <> relocWrap (byte 0x0B)
+    mconcat (map relocBuffered instrs) <> relocEmpty (byte 0x0B)
 
 instance RelocBufferable Code where
   relocBuffered (Code locals expr) =
-    relocPrependSize (relocWrap (bufferedVec locals) <> relocBuffered expr)
+    relocPrependSize (relocEmpty (bufferedVec locals) <> relocBuffered expr)
 
 instance RelocBuildable CodeSec where
   relocBuilt (CodeSec codes) =

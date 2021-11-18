@@ -1,12 +1,19 @@
 module Ulc.WebAssembly.RelocBuffer
   ( RelocBuffer (..)
-  , relocWrap
+  , relocEmpty
+  , relocSingleton
   , relocPrependSize
   )
   where
 
-import Ulc.WebAssembly.Module (Offset, RelocEntry (..))
 import Ulc.WebAssembly.Buffer (Buffer (..), unsigned)
+
+import Ulc.WebAssembly.Module
+  ( SymIdx (..)
+  , Offset
+  , RelocType (..)
+  , RelocEntry (..)
+  )
 
 data RelocBuffer =
   RelocBuffer Buffer [RelocEntry]
@@ -27,11 +34,15 @@ instance Monoid RelocBuffer where
   mempty = RelocBuffer mempty []
   mconcat = foldl (<>) mempty
 
-relocWrap :: Buffer -> RelocBuffer
-relocWrap buffer =
+relocEmpty :: Buffer -> RelocBuffer
+relocEmpty buffer =
   RelocBuffer buffer []
+
+relocSingleton :: Buffer -> RelocType -> SymIdx -> RelocBuffer
+relocSingleton buffer relocType symIdx =
+  RelocBuffer buffer [RelocEntry relocType 0 symIdx]
 
 relocPrependSize :: RelocBuffer -> RelocBuffer
 relocPrependSize relocBuffer =
   let RelocBuffer (Buffer size _) _ = relocBuffer
-  in RelocBuffer (unsigned size) [] <> relocBuffer 
+  in relocEmpty (unsigned size) <> relocBuffer 

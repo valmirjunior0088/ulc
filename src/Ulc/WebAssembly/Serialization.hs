@@ -346,14 +346,6 @@ instance Bufferable SymInfo where
           <> unsigned (packSymFlags flags)
           <> buffered funcIdx
           <> maybe mempty bufferedName name
-
-      SkData name dataIdx offset size ->
-        byte 1
-          <> unsigned (packSymFlags flags)
-          <> bufferedName name
-          <> maybe mempty buffered dataIdx
-          <> maybe mempty unsigned offset
-          <> maybe mempty unsigned size
         
 instance Bufferable SymTable where
   buffered (SymTable symInfos) =

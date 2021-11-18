@@ -19,7 +19,6 @@ module Ulc.WebAssembly.Syntax
   , getFuncRef
   , getFuncRefsLength
   , getFuncSym
-  , getDataSym
   , i32Const
   , i32FuncRef
   , i64Const
@@ -307,21 +306,6 @@ getFuncSym funcIdx = do
     predicate (SymInfo kind _) =
       case kind of
         SkFunction funcIdx' _ -> funcIdx == funcIdx'
-        SkData _ _ _ _ -> False
-
-  case findIndex predicate symInfos of
-    Nothing -> error "symbol doesn't exist"
-    Just symIdx -> return (fromIntegral symIdx)
-
-getDataSym :: String -> Syntax SymIdx
-getDataSym name = do
-  Module { mdLink = LinkSec (SymTable symInfos) } <- get
-
-  let
-    predicate (SymInfo kind _) =
-      case kind of
-        SkFunction _ _ -> False
-        SkData name' _ _ _ -> name == name'
 
   case findIndex predicate symInfos of
     Nothing -> error "symbol doesn't exist"

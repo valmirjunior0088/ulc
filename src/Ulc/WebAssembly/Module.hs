@@ -60,7 +60,6 @@ module Ulc.WebAssembly.Module
   , CodeSec (..)
   , emptyCodeSec
 
-  , Size
   , SymKind (..)
   , SymFlag (..)
   , SymInfo (..)
@@ -266,11 +265,8 @@ newtype CodeSec =
 emptyCodeSec :: CodeSec
 emptyCodeSec = CodeSec []
 
-type Size = Word32
-
 data SymKind =
-  SkFunction FuncIdx (Maybe String) |
-  SkData String (Maybe DataIdx) (Maybe Offset) (Maybe Size)
+  SkFunction FuncIdx (Maybe String)
 
 data SymFlag =
   SfVisibilityHidden |

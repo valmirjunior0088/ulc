@@ -1,5 +1,6 @@
 module Ulc.WebAssembly.RelocBuffer
   ( RelocBuffer (..)
+  , relocWrap
   , relocPrependSize
   )
   where
@@ -25,6 +26,10 @@ instance Semigroup RelocBuffer where
 instance Monoid RelocBuffer where
   mempty = RelocBuffer mempty []
   mconcat = foldl (<>) mempty
+
+relocWrap :: Buffer -> RelocBuffer
+relocWrap buffer =
+  RelocBuffer buffer []
 
 relocPrependSize :: RelocBuffer -> RelocBuffer
 relocPrependSize relocBuffer =

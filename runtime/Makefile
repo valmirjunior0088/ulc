@@ -1,26 +1,30 @@
-.PHONY: c wasm
+.SILENT:
 
 c/program.c: program.ulc
-	@stack exec ulc-compiler c program.ulc c/program.c
+	stack exec ulc-compiler c program.ulc c/program.c
 
 c/output: c/program.c
-	@clang c/io.c c/memory.c c/object.c c/program.c -o c/output -I h -O3
+	clang c/io.c c/memory.c c/object.c c/program.c -o c/output -I h -O3
+
+.PHONY: c
 
 c: c/output
-	@c/output
+	c/output
 
 wasm/memory.o: wasm/memory.c
-	@clang wasm/memory.c -o wasm/memory.o --target=wasm32 --no-standard-libraries -I h -c -O3
+	clang wasm/memory.c -o wasm/memory.o --target=wasm32 --no-standard-libraries -I h -c -O3
 
 wasm/object.o: wasm/object.c
-	@clang wasm/object.c -o wasm/object.o --target=wasm32 --no-standard-libraries -I h -c -O3
+	clang wasm/object.c -o wasm/object.o --target=wasm32 --no-standard-libraries -I h -c -O3
 
 wasm/program.o: program.ulc
-	@stack exec ulc-compiler wasm program.ulc wasm/program.o
+	stack exec ulc-compiler wasm program.ulc wasm/program.o
 
 wasm/output.wasm: wasm/memory.o wasm/object.o wasm/program.o
-	@wasm-ld wasm/memory.o wasm/object.o wasm/program.o -o wasm/output.wasm --allow-undefined --entry main -O3
+	wasm-ld wasm/memory.o wasm/object.o wasm/program.o -o wasm/output.wasm --allow-undefined --entry main -O3
+
+.PHONY: wasm
 
 wasm: wasm/output.wasm
-	@echo "Started server on http://localhost:8080"
-	@stack exec ulc-server 8080 wasm
+	echo "Started server on http://localhost:8080"
+	stack exec ulc-server 8080 wasm

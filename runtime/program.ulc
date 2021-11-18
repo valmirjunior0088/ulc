@@ -13,9 +13,12 @@ cons =
 integer_list =
   cons 1 (cons 2 (cons 3 (cons 4 nil)));
 
+real_list =
+  cons 1.1 (cons 2.2 (cons 3.3 (cons 4.4 nil)));
+
 foldr =
   go => initial => list =>
     list initial (value => rest => go value (foldr go initial rest));
 
 main =
-  foldr integer_sum 0 integer_list;
+  foldr real_sum 0.0 real_list;

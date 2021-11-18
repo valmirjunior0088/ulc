@@ -349,6 +349,7 @@ instance Bufferable SymInfo where
 
       SkData name dataIdx offset size ->
         byte 1
+          <> unsigned (packSymFlags flags)
           <> bufferedName name
           <> maybe mempty buffered dataIdx
           <> maybe mempty unsigned offset

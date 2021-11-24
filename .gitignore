@@ -1,10 +1,2 @@
 .stack-work/
 *~
-
-runtime/c/program.c
-runtime/c/output
-
-runtime/wasm/memory.o
-runtime/wasm/object.o
-runtime/wasm/program.o
-runtime/wasm/output.wasm

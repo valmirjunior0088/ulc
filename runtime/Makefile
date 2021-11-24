@@ -1,30 +1,33 @@
 .SILENT:
 
-c/program.c: program.ulc
-	stack exec ulc-compiler c program.ulc c/program.c
+build/program.c: program.ulc
+	stack exec ulc-compiler c program.ulc build/program.c
 
-c/output: c/program.c
-	clang c/io.c c/memory.c c/object.c c/program.c -o c/output -I h -O3
+build/output: deps/io.std.c deps/memory.std.c deps/object.c build/program.c
+	clang deps/io.std.c deps/memory.std.c deps/object.c build/program.c -o build/output -I include -O3
 
 .PHONY: c
 
-c: c/output
-	c/output
+c: build/output
+	build/output
 
-wasm/memory.o: wasm/memory.c
-	clang wasm/memory.c -o wasm/memory.o --target=wasm32 --no-standard-libraries -I h -c -O3
+build/index.html: deps/index.html
+	cp deps/index.html build/index.html
 
-wasm/object.o: wasm/object.c
-	clang wasm/object.c -o wasm/object.o --target=wasm32 --no-standard-libraries -I h -c -O3
+build/memory.wasm.o: deps/memory.wasm.c
+	clang deps/memory.wasm.c -o build/memory.wasm.o --target=wasm32 --no-standard-libraries -I include -c -O3
 
-wasm/program.o: program.ulc
-	stack exec ulc-compiler wasm program.ulc wasm/program.o
+build/object.wasm.o: deps/object.c
+	clang deps/object.c -o build/object.wasm.o --target=wasm32 --no-standard-libraries -I include -c -O3
 
-wasm/output.wasm: wasm/memory.o wasm/object.o wasm/program.o
-	wasm-ld wasm/memory.o wasm/object.o wasm/program.o -o wasm/output.wasm --allow-undefined --entry main -O3
+build/program.wasm.o: program.ulc
+	stack exec ulc-compiler wasm program.ulc build/program.wasm.o
+
+build/output.wasm: build/memory.wasm.o build/object.wasm.o build/program.wasm.o
+	wasm-ld build/memory.wasm.o build/object.wasm.o build/program.wasm.o -o build/output.wasm --allow-undefined --entry main -O3
 
 .PHONY: wasm
 
-wasm: wasm/output.wasm
+wasm: build/index.html build/output.wasm
 	echo "Started server on http://localhost:8080"
-	stack exec ulc-server 8080 wasm
+	stack exec ulc-server 8080 build

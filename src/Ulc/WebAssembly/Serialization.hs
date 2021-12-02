@@ -6,6 +6,7 @@ module Ulc.WebAssembly.Serialization
 import Ulc.WebAssembly.Leb128 (uleb128Builder)
 import Ulc.WebAssembly.Utf8 (utf8)
 import Data.Word (Word8, Word32)
+import Data.List (nub)
 import Data.ByteString.Builder (Builder, word8, stringUtf8, int32LE)
 
 import Ulc.WebAssembly.Module
@@ -330,7 +331,7 @@ instance RelocBuildable CodeSec where
 
 packSymFlags :: [SymFlag] -> Word32
 packSymFlags flags =
-  sum (map go flags) where
+  sum (map go $ nub flags) where
     go flag =
       case flag of
         SfVisibilityHidden -> 0x04

@@ -4,7 +4,7 @@ import Ulc (run)
 
 usage :: String -> String
 usage name =
-  "USAGE: " ++ name ++ " INPUT OUTPUT"
+  "USAGE: " ++ name ++ " {c|wasm} INPUT OUTPUT"
 
 main :: IO ()
 main = do

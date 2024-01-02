@@ -12,35 +12,32 @@ object Parse:
     CharIn("a-zA-Z").rep(min = 1).!
 
   def scope[$: P](envnt: Envnt[String], ident: String) = P:
-    for {
-      exprn <- expression(ident +: envnt)
-    } yield Exprn.Scope(exprn)(ident)
+    for exprn <- expression(ident +: envnt)
+    yield Exprn.Scope(exprn)(ident)
 
   def definition[$: P](envnt: Envnt[String]) = P:
-    for {
+    for
       ident <- "let" ~ identifier
       exprn <- "=" ~ expression(envnt)
       scope <- ";" ~ scope(envnt, ident)
-    } yield Exprn.Let(exprn, scope)
+    yield Exprn.Let(exprn, scope)
 
   def variable[$: P](envnt: Envnt[String]) = P:
-    for {
-      ident <- identifier
-    } yield Exprn.Var(envnt.indexOf(ident).get)
+    for ident <- identifier
+    yield Exprn.Var(envnt.indexOf(ident).get)
 
   def closed[$: P](envnt: Envnt[String]) = P:
     parentheses(envnt) | variable(envnt)
 
   def application[$: P](envnt: Envnt[String]) = P:
-    for {
-      exprs <- closed(envnt).rep(min = 1)
-    } yield exprs.reduceLeft(Exprn.App(_, _))
+    for exprs <- closed(envnt).rep(min = 1)
+    yield exprs.reduceLeft(Exprn.App(_, _))
 
   def abstraction[$: P](envnt: Envnt[String]) = P:
-    for {
+    for
       ident <- identifier ~ "=>"
       scope <- scope(envnt, ident)
-    } yield Exprn.Abs(scope)
+    yield Exprn.Abs(scope)
 
   def expression[$: P](envnt: Envnt[String]): P[Exprn] = P:
     definition(envnt) | abstraction(envnt) | application(envnt)

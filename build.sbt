@@ -7,7 +7,8 @@ lazy val root = project
     scalacOptions ++= Seq(
       "-Wunused:all",
       "-Wnonunit-statement",
-      "-Wvalue-discard"
+      "-Wvalue-discard",
+      "-language:strictEquality"
     ),
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit" % "0.7.29" % Test,

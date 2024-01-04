@@ -1,50 +1,53 @@
 package ulc
 
-import fastparse.MultiLineWhitespace._
-import fastparse._
 import ulc.deBruijn.Envnt
+import cats.parse.Parser
 
 object Parse:
-  def parentheses[$: P](envnt: Envnt[String]) = P:
-    "(" ~ expression(envnt) ~ ")"
+  def wspace = Parser.charIn(" \t\r\n").rep0.void
+  def symbol(string: String) = Parser.string(string) <* wspace
 
-  def identifier[$: P] = P:
-    CharIn("a-zA-Z").rep(min = 1).!
+  def number = Parser.charIn('0' to '9')
+  def letter = Parser.charIn('a' to 'z') | Parser.charIn('A' to 'Z')
+  def ident = (letter ~ (number | letter).rep0).string <* wspace
 
-  def scope[$: P](envnt: Envnt[String], ident: String) = P:
-    for exprn <- expression(ident +: envnt)
-    yield Exprn.Scope(exprn)(ident)
+  def parens(envnt: Envnt[String]) =
+    symbol("(") *> exprn(envnt) <* symbol(")")
 
-  def definition[$: P](envnt: Envnt[String]) = P:
-    for
-      ident <- "let" ~ identifier
-      exprn <- "=" ~ expression(envnt)
-      scope <- ";" ~ scope(envnt, ident)
-    yield Exprn.Let(exprn, scope)
-
-  def variable[$: P](envnt: Envnt[String]) = P:
-    for ident <- identifier
+  def varbl(envnt: Envnt[String]) =
+    for ident <- ident
     yield Exprn.Var(envnt.indexOf(ident).get)
 
-  def closed[$: P](envnt: Envnt[String]) = P:
-    parentheses(envnt) | variable(envnt)
+  def atomic(envnt: Envnt[String]) =
+    parens(envnt) | varbl(envnt)
 
-  def application[$: P](envnt: Envnt[String]) = P:
-    for exprs <- closed(envnt).rep(min = 1)
+  def applc(envnt: Envnt[String]) =
+    for exprs <- atomic(envnt).rep
     yield exprs.reduceLeft(Exprn.App(_, _))
 
-  def abstraction[$: P](envnt: Envnt[String]) = P:
+  def scope(envnt: Envnt[String], ident: String) =
+    for exprn <- exprn(ident +: envnt)
+    yield Exprn.Scope(exprn)(ident)
+
+  def abstr(envnt: Envnt[String]) =
     for
-      ident <- identifier ~ "=>"
+      ident <- ident <* symbol("=>")
       scope <- scope(envnt, ident)
     yield Exprn.Abs(scope)
 
-  def expression[$: P](envnt: Envnt[String]): P[Exprn] = P:
-    definition(envnt) | abstraction(envnt) | application(envnt)
+  def defnt(envnt: Envnt[String]) =
+    for
+      ident <- symbol("let") *> ident
+      exprn <- symbol("=") *> exprn(envnt)
+      scope <- symbol(";") *> scope(envnt, ident)
+    yield Exprn.Let(exprn, scope)
 
-  def program[$: P] = P:
-    Start ~ expression(Envnt.initial) ~ End
+  def exprn(envnt: Envnt[String]): Parser[Exprn] = Parser.defer:
+    defnt(envnt).backtrack | abstr(envnt).backtrack | applc(envnt)
 
-  def apply(input: String) = parse(input, program(_)) match
-    case Parsed.Success(exprn, _) => Right(exprn)
-    case Parsed.Failure(_, _, extra) => Left(extra.trace().longMsg)
+  def program =
+    Parser.start *> wspace *> exprn(Envnt.initial) <* Parser.end
+
+  def apply(input: String) = program.parse(input) match
+    case Right((_, output)) => Right(output)
+    case Left(error) => Left(error.toString)

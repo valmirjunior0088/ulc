@@ -12,6 +12,6 @@ lazy val root = project
     ),
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit" % "0.7.29" % Test,
-      "com.lihaoyi" %% "fastparse" % "3.0.2"
+      "org.typelevel" %% "cats-parse" % "0.3.9"
     )
   )
